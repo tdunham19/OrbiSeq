@@ -1,0 +1,86 @@
+#!/usr/bin/perl
+
+
+use strict;
+use Getopt::Long;
+
+
+my $print_usage = 0;
+
+my $usage = <<USAGE;
+
+  this script outputs a mask file corresponding to missing positions in vcf file with no coverage
+
+  $0 [-h] vcf_file
+
+  [-h]         print this message
+
+USAGE
+
+if ( -t STDIN and not @ARGV ) { print $usage and exit; }
+
+GetOptions ("h" => \$print_usage);
+
+if ($print_usage) {print $usage and exit; }
+
+my @seqs = ();
+my %seqs_mask = ();
+my $current_seq = undef;
+
+# parse through vcf file
+while (<>)
+{
+  chomp;
+  if (/##contig/)
+  {
+     if (/##contig=<ID=(\S+),length=(\d+)>/)
+     {
+        # keep track of lengths and names of ref seqs
+        my $seq_name = $1;
+        push @seqs, $seq_name;
+        my $seq_length = $2;
+        $seqs_mask{$seq_name}{length} = $seq_length;
+
+        for (my $i = 1; $i <= $seq_length; $i++)
+        {
+           # 1 record for each base of each ref seq
+           # if we find a vcf record of each base, we will set to 1
+           $seqs_mask{$seq_name}{$i} = 0;
+        }
+     }
+     else
+     {
+        die "error: couldn't parse line: $_\n";
+     }
+  }
+  elsif (!/^#/)
+  {
+     # real vcf data line
+     my @fields = split;
+     my $seq = $fields[0];
+     my $position = $fields[1];
+     # turn "on" if a vcf line for this position
+     $seqs_mask{$seq}{$position} = 1;
+  }
+}
+
+# output mask 
+
+foreach my $seq (@seqs)
+{
+   my $seq_length = $seqs_mask{$seq}{length};
+   for (my $i = 1; $i <= $seq_length; $i++)
+   {
+      if (!$seqs_mask{$seq}{$i})
+      {
+         print "$seq\t$i\n";
+      }
+   }
+}
+
+
+
+
+
+
+

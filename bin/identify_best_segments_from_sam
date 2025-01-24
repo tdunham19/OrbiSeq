@@ -1,0 +1,127 @@
+#!/usr/bin/perl
+
+#
+# This script identifies the best aligned-to BTV reference sequences
+# 
+# Mark Stenglein July 27, 2012
+#
+
+use strict;
+use Getopt::Long;
+
+my $usage = <<USAGE;
+
+ This script identifies the best aligned-to BTV reference sequences
+
+ Inputs: fasta file of BTV ref seqs, and
+         sam file of reads aligned to those ref seqs
+
+ usage: $0  [-h] [-u] <fasta_file_used_to_create_bt_index> <sam_file>
+
+   -h                print this message
+
+USAGE
+
+my $print_usage = 0;
+my $output_unmapped = 0;
+
+if (scalar @ARGV != 2) { print $usage; exit; }
+
+GetOptions ("h" => \$print_usage);
+
+if ($print_usage) { print $usage; exit; }
+
+my $fasta_file = shift or print $usage and die($!);
+open (my $fasta_fh, "<", $fasta_file) or print $usage and die("error: couldn't open fasta file $fasta_file\n$!\n");
+
+my $sam_file = shift or print $usage and die($!);
+open (my $sam_fh, "<", $sam_file) or print $usage and die("error: couldn't open sam file $sam_file\n$!\n");
+
+
+my $flag = 0;
+my @fields = ();
+my @tags = ();
+my %subject_id_tally = ();
+
+# iterate through sam file and keep track of how many times each segment (each index subject)
+# gets a read aligned to it
+while (<$sam_fh>)
+{
+   chomp;
+
+   if (/^@/)
+   {
+      # header lines - ignore them
+      next;
+   }
+   
+   # split line into tab-delimited components
+   @fields = split "\t";
+
+   # is this an unmapped query?
+   if (!$output_unmapped)
+   {
+      my $flag = $fields[1];
+      # don't output unmapped queries
+      # see SAM format spec.
+      if ($flag & 4) { next; }
+   }
+
+   # create tally of aligned-to subject IDs
+   my $subject_id = $fields[2];
+   $subject_id_tally{$subject_id} += 1;
+}
+
+my @segment_numbers = (1..10);
+my %best_aligned_to_segment_ids = ();
+
+# for each segment #1 -> #10
+foreach my $segment (@segment_numbers)
+{
+   # iterate through a sorted list of aligned-to subject IDs and stop once we reach the most aligned-to for
+   # this particular segment
+   foreach my $subject_id (sort {$subject_id_tally{$b} <=> $subject_id_tally{$a}} keys %subject_id_tally)
+   {
+      # my $subject_id = $subject_id_tally{$subject_id};
+      # print "$subject_id\t$hit_count\n";
+      if ($subject_id =~ /s(\d+)_/)
+      {
+         my $this_segment_number = $1;
+         if ($this_segment_number == $segment)
+         {
+            warn "$segment: $subject_id\n"; # output to stderr
+            $best_aligned_to_segment_ids{$subject_id} = 1; # keep track of best segment IDs
+            last; # break out of for loop
+         }
+      }
+      else
+      {
+         die ("error: couldn't parse segment # for subject ID: $subject_id\n");
+      }
+   }
+}
+
+# now parse through fasta file and output seqs if they are one of the best 10
+my $printing_lines = 0;
+while (<$fasta_fh>)
+{
+   chomp;
+   # fasta header line
+   if (/^>(.+)/)
+   {
+      $printing_lines = 0;
+      my $seq_id = $1; 
+      # is this one of the best segments?  If so, we'll print it out
+      if ($best_aligned_to_segment_ids{$seq_id})
+      {
+         $printing_lines = 1;
+      }
+   }
+   if ($printing_lines)
+   {
+      print "$_\n";
+   }
+}
+
+
+

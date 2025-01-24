@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+
+# This script removes N characters at the end or beginning of a fasta sequence
+#
+# Mark Stenglein 12/2015
+
+while (<>)
+{
+  chomp;
+  if (/^>/)
+  {
+     print "$_\n";
+  }
+  else
+  {
+     my $seq = $_;
+     $seq =~ s/^N+//g;
+     $seq =~ s/N+$//g;
+     print "$seq\n";
+  }
+}
