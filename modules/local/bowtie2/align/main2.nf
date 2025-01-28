@@ -8,8 +8,8 @@ process BOWTIE2_ALIGN {
 
     input:
     tuple val(meta) , path(reads), path(index)
-    val   save_unaligned
-    val   sort_bam
+    val(save_unaligned)
+    val(sort_bam)
 
     output:
     tuple val(meta), path("*.sam")      , emit: sam

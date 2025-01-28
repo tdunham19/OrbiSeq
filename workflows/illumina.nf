@@ -1,4 +1,4 @@
-// include { STENGLEIN_READ_PREPROCESSING as PREPROCESSING      } from '../modules/local/preprocessing/main.nf'
+// include { READ_PREPROCESSING as STENGLEIN_READ_PREPROCESSING } from 'https://github.com/stenglein-lab/read_preprocessing.git' 
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_EXISTING      } from '../modules/local/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN as BOWTIE2_ALIGN_TO_EXISTING  		 } from '../modules/local/bowtie2/align/main.nf'
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_ALIGNMENT    		 } from '../modules/local/samtools/view/main.nf'
@@ -68,7 +68,8 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
     
   // run bowtie2-align on input reads with large reference
   BOWTIE2_ALIGN_TO_EXISTING ( ch_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index, save_unaligned, sort_bam )
-    
+  // ch_versions = ch_versions.mix ( BOWTIE2_ALIGN_TO_EXISTING.out.versions )      
+
   // run samtools to process bowtie2 alignment - view
   SAMTOOLS_VIEW_ALIGNMENT ( BOWTIE2_ALIGN_TO_EXISTING.out.sam )
   
@@ -86,7 +87,7 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
   
   // re-align data against best 10 BTV ref seqs.
   BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_reads.join(BOWTIE2_BUILD_INDEX_BEST10.out.index), save_unaligned, sort_bam )
-  
+
   // run samtools to process bowtie2 alignment again - view
   SAMTOOLS_VIEW_BEST10_ALIGNMENT ( BOWTIE2_ALIGN_TO_NEW_DRAFT.out.sam )
   
@@ -136,7 +137,7 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
    
   // re-align data against the new draft sequence (ie. final consensus sequence)
   BOWTIE2_ALIGN_TO_FINAL ( ch_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index), save_unaligned, sort_bam )
-  
+
   // run multiqc on final output
   // MULTIQC
   
