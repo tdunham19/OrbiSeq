@@ -67,8 +67,7 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
   BOWTIE2_BUILD_INDEX_EXISTING ( ch_reference )
     
   // run bowtie2-align on input reads with large reference
-  BOWTIE2_ALIGN_TO_EXISTING ( ch_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index, save_unaligned, sort_bam )
-  // ch_versions = ch_versions.mix ( BOWTIE2_ALIGN_TO_EXISTING.out.versions )      
+  BOWTIE2_ALIGN_TO_EXISTING ( ch_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index )
 
   // run samtools to process bowtie2 alignment - view
   SAMTOOLS_VIEW_ALIGNMENT ( BOWTIE2_ALIGN_TO_EXISTING.out.sam )
@@ -86,7 +85,7 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
   BOWTIE2_BUILD_INDEX_BEST10 ( IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa )
   
   // re-align data against best 10 BTV ref seqs.
-  BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_reads.join(BOWTIE2_BUILD_INDEX_BEST10.out.index), save_unaligned, sort_bam )
+  BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_reads.join(BOWTIE2_BUILD_INDEX_BEST10.out.index) ) 
 
   // run samtools to process bowtie2 alignment again - view
   SAMTOOLS_VIEW_BEST10_ALIGNMENT ( BOWTIE2_ALIGN_TO_NEW_DRAFT.out.sam )
@@ -136,7 +135,7 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
   BOWTIE2_BUILD_INDEX_FINAL ( BCFTOOLS_CONSENSUS.out.fa )
    
   // re-align data against the new draft sequence (ie. final consensus sequence)
-  BOWTIE2_ALIGN_TO_FINAL ( ch_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index), save_unaligned, sort_bam )
+  BOWTIE2_ALIGN_TO_FINAL ( ch_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
 
   // run multiqc on final output
   // MULTIQC

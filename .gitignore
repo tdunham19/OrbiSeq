@@ -6,3 +6,4 @@ reference/
 .nextflow/
 /*.fasta
 /*.pdf
+*_archive/
