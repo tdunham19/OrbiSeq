@@ -7,8 +7,6 @@ OrbiSeq is a Nextflow pipeline to analyze short and long sequences for Orbivirus
 - [Stopping and Resuming](#Stopping-and-Resuming)
 
 ## Workflow Steps
-[This workflow] (https://github.com/tdunham19/OrbiSeq)
-
 - Illumina workflow 
 	- Preprocessing of input reads : read_preprocessing MDS pipeline
 	- Align input reads to large Orbi RefSeq : bowtie2 build & align 
