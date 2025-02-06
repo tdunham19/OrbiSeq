@@ -19,7 +19,7 @@ process BOWTIE2_ALIGN {
     [ -z "\$INDEX" ] && INDEX=`find -L ./ -name "*.rev.1.bt2l" | sed "s/.rev.1.bt2l//"`
     [ -z "\$INDEX" ] && echo "Bowtie2 index files not found" 1>&2 && exit 1
     
-    bowtie2 -x \$INDEX -q -1 ${reads} -2 ${reads} --local --qc-filter --score-min C,120,1 --maxins 700 --time --no-unal --al-conc ${meta.id}.conc_hits.fastq --threads 24 -S ${meta.id}_best10.sam
+    bowtie2 -x \$INDEX -q -1 ${reads[0]} -2 ${reads[1]} --local --qc-filter --score-min C,120,1 --maxins 700 --time --no-unal --al-conc ${meta.id}.conc_hits.fastq --threads 24 -S ${meta.id}_best10.sam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
