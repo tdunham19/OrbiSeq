@@ -1,12 +1,16 @@
-// include { READ_PREPROCESSING as STENGLEIN_READ_PREPROCESSING } from 'https://github.com/stenglein-lab/read_preprocessing.git' 
+// clone and include read preprocessing subworkflow
+// include { CLONE_SUBWORKFLOW_REPO 							 } from '../modules/local/clonerepo/main.nf'
+// include { READ_PREPROCESSING     							 } from '../subworkflows/main.nf'
+
+// include other nf-core and Stenglein lab/local modules
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_EXISTING      } from '../modules/nf_core/bowtie2/build/main.nf'
-include { BOWTIE2_ALIGN as BOWTIE2_ALIGN_TO_EXISTING  		 } from '../modules/nf_core/bowtie2/align/main.nf'
+include { BOWTIE2_ALIGN_TO_EXISTING  		 				 } from '../modules/nf_core/bowtie2/align/main.nf'
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_ALIGNMENT    		 } from '../modules/nf_core/samtools/view/main.nf'
 include { SAMTOOLS_SORT  as SAMTOOLS_SORT_ALIGNMENT    		 } from '../modules/nf_core/samtools/sort/main.nf'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_ALIGNMENT  		 } from '../modules/nf_core/samtools/index/main.nf'
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 } from '../modules/local/identify_best_segments_from_sam/main.nf'
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_BEST10        } from '../modules/nf_core/bowtie2/build/main2.nf'
-include { BOWTIE2_ALIGN as BOWTIE2_ALIGN_TO_NEW_DRAFT   	 } from '../modules/nf_core/bowtie2/align/main2.nf'
+include { BOWTIE2_ALIGN_TO_NEW_DRAFT   	 				     } from '../modules/nf_core/bowtie2/align/main.nf'
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/view/main.nf'
 include { SAMTOOLS_SORT  as SAMTOOLS_SORT_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/sort/main.nf'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_BEST10_ALIGNMENT  } from '../modules/nf_core/samtools/index/main.nf'
@@ -21,12 +25,12 @@ include { BCFTOOLS_CONSENSUS					 			 } from '../modules/nf_core/bcftools/consen
 include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_FINAL	     } from '../modules/nf_core/bowtie2/build/main3.nf'
-include { BOWTIE2_ALIGN as BOWTIE2_ALIGN_TO_FINAL            } from '../modules/nf_core/bowtie2/align/main3.nf'
+include { BOWTIE2_ALIGN_TO_FINAL           				     } from '../modules/nf_core/bowtie2/align/main.nf'
 // include { MULTIQC 											 } from './modules/nf_core/multiqc/main.nf'
 
 workflow ILLUMINA_CONSENSUS {
 
-  ch_versions = Channel.empty()                                               
+    ch_versions = Channel.empty()                                              
 
   // fastq input files  
   
@@ -57,25 +61,29 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
             [meta2, reference]
         }
     .set { ch_reference } 
+    
+  // clone Stenglein lab read preprocessing pipeline
+  // CLONE_SUBWORKFLOW_REPO ()  
       
   // use Stenglein lab read preprocessing pipeline to do fastqc and trim reads. 
-  // STENGLEIN_READ_PREPROCESSING ( ch_reads )
-  
+  // READ_PREPROCESSING ( ch_reads, collapse_duplicate_reads: params.collapse_duplicate_reads, fastq_dir: params.fastq_dir )
+
   // Build bowtie2 index
   BOWTIE2_BUILD_INDEX_EXISTING ( ch_reference )
     
   // run bowtie2-align on input reads with large reference
   BOWTIE2_ALIGN_TO_EXISTING ( ch_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index )
-  
+ 
+// Trying to get the suffix added in for one main.nf
+  // BOWTIE2_ALIGN_TO_EXISTING ( READ_PREPROCESSING.out.gz, BOWTIE2_BUILD_INDEX_EXISTING.out.index )
   // BOWTIE2_ALIGN_TO_EXISTING ( ch_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index, "initial" )
-  // BOWTIE2_ALIGN_TO_EXISTING ( ch_reads.merge(BOWTIE2_BUILD_INDEX_EXISTING.out.index).map { meta, reads, index -> [meta, reads, index, "initial"] } )
+  // BOWTIE2_ALIGN_TO_EXISTING ( ch_reads.join(BOWTIE2_BUILD_INDEX_EXISTING.out.index).map { meta, reads, index, file_suffix -> [meta, reads, index, "initial"] } )
   // ch_align_to_existing = ch_reads.join(BOWTIE2_BUILD_INDEX_EXISTING.out.index).map {meta, reads, index -> [meta, reads, index, "initial"] }
   // BOWTIE2_ALIGN_TO_EXISTING( ch_align_to_existing )
   // def ch_initial = Channel.from(ch_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index)
-  
   // Channel.from( [ch_reads], [BOWTIE2_BUILD_INDEX_EXISTING.out.index] ).collect().set { ch_initial_reads_index }
-  
-  // BOWTIE2_ALIGN_TO_EXISTING( ch_initial_reads_index.map {meta, input -> [meta, input, "initial"] } )
+  // ch_initial = ( ch_reads.combine(BOWTIE2_BUILD_INDEX_EXISTING.out.index) )
+  // BOWTIE2_ALIGN_TO_EXISTING( ch_initial.map {meta, initial, file_suffix -> [meta, initial, "initial"] } )
   
   // run samtools to process bowtie2 alignment - view converts .sam to .bam 
   SAMTOOLS_VIEW_ALIGNMENT ( BOWTIE2_ALIGN_TO_EXISTING.out.sam )
