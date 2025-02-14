@@ -1,0 +1,43 @@
+name: prepend_tsv_with_id
+description: Prepend a tab-delimited file with sample ID
+keywords:
+  - tidy data 
+  - tsv
+tools:
+  - awk:
+      description: |
+        FastQC gives general quality metrics about your reads.
+      homepage: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+      documentation: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/
+      licence: ["GPL-2.0-only"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test', single_end:false ]
+  - reads:
+      type: file
+      description: |
+        List of input FastQ files of size 1 and 2 for single-end and paired-end data,
+        respectively.
+output:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test', single_end:false ]
+  - html:
+      type: file
+      description: FastQC report
+      pattern: "*_{fastqc.html}"
+  - zip:
+      type: file
+      description: FastQC report archive
+      pattern: "*_{fastqc.zip}"
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+authors:
+  - "@markstenglein"

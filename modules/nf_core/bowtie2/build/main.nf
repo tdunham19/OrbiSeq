@@ -7,7 +7,7 @@ process BOWTIE2_BUILD {
         'biocontainers/bowtie2:2.5.2--py39h6fed5c7_0' }"
 
     input:
-    tuple val(meta), path(reference)
+    tuple val(meta), path(input)
 
     output:
     tuple val(meta), path('bowtie2')    , emit: index
@@ -15,7 +15,7 @@ process BOWTIE2_BUILD {
     script:
     """
     mkdir bowtie2
-    bowtie2-build $reference bowtie2/${reference.baseName}
+    bowtie2-build $input bowtie2/${input.baseName}
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+f=$1
+
+if [[ $(od -x $f -A n -N 2) == " 8b1f" ]]
+then
+  echo "$f is compressed"
+else
+  echo "$f is not compressed"
+fi
