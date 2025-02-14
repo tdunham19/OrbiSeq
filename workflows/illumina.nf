@@ -37,7 +37,7 @@ workflow ILLUMINA_CONSENSUS {
 
   // fastq input files  
   
-Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, checkIfExists: true, maxDepth: 1)
+Channel.fromFilePairs("${params.trim_dedup_fastq}", size: -1, checkIfExists: true, maxDepth: 1)
   .map{ name, reads ->
          def meta        = [:]
          meta.id         = name.replaceAll( /.gz$/ ,"")
@@ -51,7 +51,7 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
          meta.single_end = reads[1] ? false : true
          [ meta, reads ] }
 
-  .set { ch_reads }
+  .set { ch_trim_dedup_reads }
 
   
   // refseq input files
@@ -72,7 +72,7 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
   BOWTIE2_BUILD_INDEX_EXISTING ( ch_reference )
     
   // run bowtie2-align on input reads with large reference
-  BOWTIE2_ALIGN_TO_EXISTING ( PREPROCESS_READS.out.reads.join(BOWTIE2_BUILD_INDEX_EXISTING.out.index) )
+  BOWTIE2_ALIGN_TO_EXISTING (ch_trim_dedup_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index )
   
   // run samtools to process bowtie2 alignment - view converts .sam to .bam 
   SAMTOOLS_VIEW_ALIGNMENT ( BOWTIE2_ALIGN_TO_EXISTING.out.sam )
@@ -90,7 +90,7 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
   BOWTIE2_BUILD_INDEX_BEST10 ( IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa )
   
   // re-align data against best 10 BTV ref seqs.
-  BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_reads.join(BOWTIE2_BUILD_INDEX_BEST10.out.index) )
+  BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_trim_dedup_reads.join(BOWTIE2_BUILD_INDEX_BEST10.out.index) )
   
   // run samtools to process bowtie2 alignment again - view converts .sam to .bam 
   SAMTOOLS_VIEW_BEST10_ALIGNMENT ( BOWTIE2_ALIGN_TO_NEW_DRAFT.out.sam )
@@ -111,7 +111,7 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
   // bcftools mpileup calls variants -> output is a vcf file
   BCFTOOLS_MPILEUP ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
 
-  // this script creates a mask file which is necessary because otherwise bcftools consensus doesn't hanlde positions with no coverage well
+  // this script creates a mask file which is necessary because otherwise bcftools consensus doesnt hanlde positions with no coverage well
   CREATE_MASK_FILE ( BCFTOOLS_MPILEUP.out.vcf )
 
   // convert vcf -> compressed vcf to make bcftools happy
@@ -139,7 +139,7 @@ Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, c
   BOWTIE2_BUILD_INDEX_FINAL ( BCFTOOLS_CONSENSUS.out.fa )
    
   // re-align data against the new draft sequence (ie. final consensus sequence)
-  BOWTIE2_ALIGN_TO_FINAL ( ch_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
+  BOWTIE2_ALIGN_TO_FINAL ( ch_trim_dedup_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
 
   // run multiqc on final output
   // MULTIQC
