@@ -29,31 +29,11 @@ include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trail
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_FINAL	     } from '../modules/nf_core/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN_TO_FINAL           				     } from '../modules/nf_core/bowtie2/align/main.nf'
-// include { MULTIQC 											 } from './modules/nf_core/multiqc/main.nf'
 
 workflow ILLUMINA_CONSENSUS {
 
     ch_versions = Channel.empty()                                              
 
-  // fastq input files  
-  
-Channel.fromFilePairs("${params.trim_dedup_fastq}", size: -1, checkIfExists: true, maxDepth: 1)
-  .map{ name, reads ->
-         def meta        = [:]
-         meta.id         = name.replaceAll( /.gz$/ ,"")
-         meta.id         = meta.id.replaceAll( /.fastq$/ ,"")
-         meta.id         = meta.id.replaceAll( /.fq$/ ,"")
-         meta.id         = meta.id.replaceAll( /.uniq$/ ,"")
-         meta.id         = meta.id.replaceAll( /.trim$/ ,"")
-         meta.id         = meta.id.replaceFirst( /_001$/ ,"")
-         meta.id         = meta.id.replaceFirst( /_R[12]$/ ,"")
-         meta.id         = meta.id.replaceFirst( /_S\d+$/ ,"")
-         meta.single_end = reads[1] ? false : true
-         [ meta, reads ] }
-
-  .set { ch_trim_dedup_reads }
-
-  
   // refseq input files
 
     Channel.fromPath("${params.reference_fasta}")
@@ -71,9 +51,10 @@ Channel.fromFilePairs("${params.trim_dedup_fastq}", size: -1, checkIfExists: tru
   // Build bowtie2 index
   BOWTIE2_BUILD_INDEX_EXISTING ( ch_reference )
     
-  // run bowtie2-align on input reads with large reference
-  BOWTIE2_ALIGN_TO_EXISTING (ch_trim_dedup_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index )
-  
+  // run bowtie2-align on input reads with large reference  
+  ch_processed_reads = PREPROCESS_READS.out.reads
+  BOWTIE2_ALIGN_TO_EXISTING (ch_processed_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index )
+
   // run samtools to process bowtie2 alignment - view converts .sam to .bam 
   SAMTOOLS_VIEW_ALIGNMENT ( BOWTIE2_ALIGN_TO_EXISTING.out.sam )
   
@@ -90,7 +71,7 @@ Channel.fromFilePairs("${params.trim_dedup_fastq}", size: -1, checkIfExists: tru
   BOWTIE2_BUILD_INDEX_BEST10 ( IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa )
   
   // re-align data against best 10 BTV ref seqs.
-  BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_trim_dedup_reads.join(BOWTIE2_BUILD_INDEX_BEST10.out.index) )
+  BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_BEST10.out.index) )
   
   // run samtools to process bowtie2 alignment again - view converts .sam to .bam 
   SAMTOOLS_VIEW_BEST10_ALIGNMENT ( BOWTIE2_ALIGN_TO_NEW_DRAFT.out.sam )
@@ -102,7 +83,7 @@ Channel.fromFilePairs("${params.trim_dedup_fastq}", size: -1, checkIfExists: tru
   SAMTOOLS_INDEX_BEST10_ALIGNMENT ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam )
   
   
-  // commands below create "new" consensus sequences
+  // commands below create new consensus sequences
   
   
   // have to make a .fai file to make mpileup happy - faidx allows for fast random access for reference files in fasta format 
@@ -139,10 +120,7 @@ Channel.fromFilePairs("${params.trim_dedup_fastq}", size: -1, checkIfExists: tru
   BOWTIE2_BUILD_INDEX_FINAL ( BCFTOOLS_CONSENSUS.out.fa )
    
   // re-align data against the new draft sequence (ie. final consensus sequence)
-  BOWTIE2_ALIGN_TO_FINAL ( ch_trim_dedup_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
-
-  // run multiqc on final output
-  // MULTIQC
+  BOWTIE2_ALIGN_TO_FINAL ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
   
   }
   
