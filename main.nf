@@ -6,11 +6,11 @@ println "Selected reference: ${params.reference}"
 
 workflow {  
   if (params.reference == 'BTV') {
-    path_to_reference = params.btv_reference
-  } else if (params.reference == 'EHD') {
-    path_to_reference = params.ehdv_reference
+    params.BTV_reference
+  } else if (params.reference == 'EHDV') {
+    params.EHDV_reference
   } else if (params.reference == 'custom') {
-    path_to_reference = params.custom_reference
+    params.custom_reference
   } else {
     error "No reference provided. Please specify --reference (BTV, EHDV, or custom)."
   }
