@@ -11,9 +11,11 @@ OrbiSeq is a Nextflow pipeline to analyze short and long sequences for Orbivirus
 OrbiSeq is a nextflow pipeline that will create consensus sequences for any Orbivirus with 10 segments from sequencing data produced with Illumina or Nanopore technologies. This pipeline has the capability to run premade reference files included with the pipeline or custom reference files uploaded by the user. 
 
 Platform:
+
 This pipeline has the capability to run either Illumina or Nanopore sequencing data. When running this pipeline the user must specify which platform their data came from. 
 
 Reference:
+
 This pipeline can utlitize any reference genome from Orbiviruses with 10 segments. 
 - Premade Reference Sequences 
 	- There are premade reference files for Bluetongue virus (BTV) and Epizootic hemhorragic disease virus (EHDV). More information on the creation of these references can be found in [cite publication]. 
@@ -43,7 +45,8 @@ This pipeline can utlitize any reference genome from Orbiviruses with 10 segment
 	- Align input reads to final consensu sequence : minimap2 align 
 	
 These workflows take advantage of nf-core [modules](https://nf-co.re/modules) for many of these components and the overall [nf-core](https://nf-co.re/) design philosophy.
-Additionally, the illumina workflow takes advantage of the [Stenglein Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing).
+
+Additionally, the illumina workflow takes advantage of the [Stenglein Lab Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing).
 
 ## Running the Pipeline
 
