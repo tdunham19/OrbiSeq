@@ -5,7 +5,9 @@ OrbiSeq is a Nextflow pipeline to analyze short and long sequences for Orbivirus
 - [Pipeline Overview](#Pipeline-Overview)
 - [Workflow Steps](#Workflow-Steps)
 - [Running the Pipeline](#Running-the-Pipeline)
+	- [Optional Deduplication](#Optional-Deduplication)
 - [Stopping and Resuming](#Stopping-and-Resuming)
+- [Run Test Profile](#Run-Test-Profile)
 
 ## Pipeline Overview
 OrbiSeq is a nextflow pipeline that will create consensus sequences for any Orbivirus with 10 segments from sequencing data produced with Illumina or Nanopore technologies. This pipeline has the capability to run premade reference files included with the pipeline or custom reference files uploaded by the user. 
@@ -27,6 +29,7 @@ This pipeline can utlitize any reference genome from Orbiviruses with 10 segment
 
 ### Illumina workflow 
 - Preprocessing of input reads : Stenglein Lab read_preprocessing pipeline
+	- Optional collapse duplicate reads 
 - Align input reads to large Orbi RefSeq : bowtie2 build & align 
 - Process files : samtools 
 - Choose best 10 segments from initial alignment
@@ -62,7 +65,13 @@ mkdir results
 ```
 3. Run the pipeline: must specify sequencing platform and reference file 
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference ['BTV','EHDV', or 'custom']
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference ['BTV','EHDV', or 'custom'] -resume
+```
+
+### Optional Deduplication 
+
+```
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference ['BTV','EHDV', or 'custom'] --collapse_duplicate_reads -resume
 ```
 
 ## Stopping and Resuming 
@@ -73,4 +82,11 @@ control(^) C
 - To resume the run add the -resume option
 ```
 Nextflow run main.nf --platform specify -resume
+```
+
+## Run Test Profile
+
+To run the test profile utilize the following code
+```
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference ['BTV','EHDV', or 'custom'] --profile test -resume
 ```
