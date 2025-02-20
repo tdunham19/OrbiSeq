@@ -1,1 +1,1 @@
-Including this as file strucutre for GitHub
+Including this as file structure for GitHub
