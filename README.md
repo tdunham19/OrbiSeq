@@ -18,7 +18,7 @@ This pipeline has the capability to run either Illumina or Nanopore sequencing d
 
 This pipeline can utlitize any reference genome from Orbiviruses with 10 segments. 
 - Premade Reference Sequences 
-	- There are premade reference files for Bluetongue virus (BTV) and Epizootic hemhorragic disease virus (EHDV). More information on the creation of these references can be found in [cite publication]. 
+	- There are premade reference files for Bluetongue virus (BTV) and Epizootic hemorrhagic disease virus (EHDV). More information on the creation of these references can be found in [cite publication]. 
 - Custom Reference Sequences	
 	- The user is also able to upload their own custom reference file by placing it in the ./reference directory
 
