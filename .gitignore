@@ -8,4 +8,4 @@ reference/
 /*.pdf
 *_archive/
 /*.gz
-[:]/
+test/
