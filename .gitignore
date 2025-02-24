@@ -2,6 +2,7 @@ work/
 results/
 fastq/
 reference/
+summary/
 .nextflow.lo*
 .nextflow/
 /*.fasta
