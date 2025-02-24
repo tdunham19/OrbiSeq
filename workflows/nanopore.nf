@@ -1,3 +1,4 @@
+include { PYCOQC										 	 } from '../modules/nf_core/pycoqc/main.nf'
 include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_EXISTING  	 } from '../modules/nf_core/minimap2/align/main.nf'
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_ALIGNMENT    		 } from '../modules/nf_core/samtools/view/main.nf'
 include { SAMTOOLS_SORT  as SAMTOOLS_SORT_ALIGNMENT    		 } from '../modules/nf_core/samtools/sort/main.nf'
@@ -48,6 +49,20 @@ workflow NANOPORE_CONSENSUS {
             [meta2, reference]
         }
     .set { ch_reference }
+    
+    // summary input file
+    
+    Channel.fromPath("${params.summary_file}")
+    .collect()
+    .map { summary ->
+            def meta3 = [:]
+            meta3.id = "summary"
+            [meta3, summary]
+        }
+    .set { ch_summary }
+    
+  // run PycoQC
+  PYCOQC ( ch_summary )
     
   // run minimap2 on input reads
   MINIMAP2_ALIGN_TO_EXISTING ( ch_reads, ch_reference )
