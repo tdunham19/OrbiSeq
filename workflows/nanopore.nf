@@ -4,12 +4,12 @@ nextflow.enable.dsl=2
 
 // include modules: local, nf-core, and Stenglein lab
 include { PYCOQC										 	 } from '../modules/nf_core/pycoqc/main.nf'
-include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_EXISTING  	 } from '../modules/nf_core/minimap2/align/main.nf'
+include { MINIMAP2_ALIGN_TO_EXISTING  	 				     } from '../modules/nf_core/minimap2/align/main.nf'
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_ALIGNMENT    		 } from '../modules/nf_core/samtools/view/main.nf'
 include { SAMTOOLS_SORT  as SAMTOOLS_SORT_ALIGNMENT    		 } from '../modules/nf_core/samtools/sort/main.nf'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_ALIGNMENT  		 } from '../modules/nf_core/samtools/index/main.nf'
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 } from '../modules/local/identify_best_segments_from_sam/main.nf'
-include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_NEW_DRAFT  	 } from '../modules/nf_core/minimap2/align/main.nf'
+include { MINIMAP2_ALIGN_TO_NEW_DRAFT  						 } from '../modules/nf_core/minimap2/align/main.nf'
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/view/main.nf'
 include { SAMTOOLS_SORT  as SAMTOOLS_SORT_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/sort/main.nf'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_BEST10_ALIGNMENT  } from '../modules/nf_core/samtools/index/main.nf'
@@ -23,7 +23,7 @@ include { BCFTOOLS_INDEX as BCFTOOLS_INDEX_CONS	 			 } from '../modules/nf_core/
 include { BCFTOOLS_CONSENSUS					 			 } from '../modules/nf_core/bcftools/consensus/main.nf'
 include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
-include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_FINAL		  	 } from '../modules/nf_core/minimap2/align/main.nf'
+include { MINIMAP2_ALIGN_TO_FINAL		  					 } from '../modules/nf_core/minimap2/align/main.nf'
 
 workflow NANOPORE_CONSENSUS {
 
