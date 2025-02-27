@@ -21,6 +21,7 @@ This pipeline has the capability to run either Illumina or Nanopore sequencing d
 This pipeline can utlitize any reference genome from Orbiviruses with 10 segments. 
 - Premade Reference Sequences 
 	- There are premade reference files for Bluetongue virus (BTV) and Epizootic hemorrhagic disease virus (EHDV). More information on the creation of these references can be found in [cite publication]. 
+		- The reference files for BTV and EHDV can be found in ./reference/BTV and ./reference/EHDV respectively. 
 - Custom Reference Sequences	
 	- The user is also able to upload their own custom reference file by placing it in the ./reference directory
 
@@ -63,15 +64,15 @@ cd read_preprocessing
 mkdir fastq
 mkdir results
 ```
-3. Run the pipeline: must specify sequencing platform and reference file 
+3. Run the pipeline: must specify sequencing platform and where the reference file is located.  
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference ['BTV','EHDV', or 'custom'] -resume
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/fastq/directory  -resume
 ```
 
 ### Optional Deduplication 
 
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference ['BTV','EHDV', or 'custom'] --collapse_duplicate_reads -resume
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/fastq/directory --collapse_duplicate_reads -resume
 ```
 
 ## Stopping and Resuming 
@@ -88,5 +89,5 @@ Nextflow run main.nf --platform specify -resume
 
 To run the test profile utilize the following code
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference ['BTV','EHDV', or 'custom'] --profile test -resume
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/fastq/directory --profile test -resume
 ```
