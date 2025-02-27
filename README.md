@@ -66,13 +66,13 @@ mkdir results
 ```
 3. Run the pipeline: must specify sequencing platform and where the reference file is located.  
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/fastq/directory  -resume
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/reference/directory  -resume
 ```
 
 ### Optional Deduplication 
 
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/fastq/directory --collapse_duplicate_reads -resume
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/reference/directory --collapse_duplicate_reads -resume
 ```
 
 ## Stopping and Resuming 
@@ -89,5 +89,5 @@ Nextflow run main.nf --platform specify -resume
 
 To run the test profile utilize the following code
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/fastq/directory --profile test -resume
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/reference/directory --profile test -resume
 ```
