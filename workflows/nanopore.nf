@@ -46,7 +46,7 @@ workflow NANOPORE_CONSENSUS {
   
   // refseq input files
 
-    Channel.fromPath("${params.reference_fasta}")
+    Channel.fromPath("${params.reference}")
     .collect()
     .map { reference ->
             def meta2 = [:]
