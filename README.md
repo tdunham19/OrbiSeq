@@ -59,11 +59,8 @@ Additionally, the illumina workflow takes advantage of the [Stenglein Lab Read P
 git clone https://github.com/tdunham19/OrbiSeq.git
 cd OrbiSeq
 ```
-2. Create results directory
-```
-mkdir results
-```
-3. Run the pipeline: must specify sequencing platform and where the reference file is located.  
+
+2. Run the pipeline: must specify sequencing platform and where the reference file is located.  
 ```
 nextflow run main.nf --platform ['illumina' or 'nanopore'] --fastq_dir /path/to/fastq/directory --reference /path/to/reference/directory  -resume
 ```
