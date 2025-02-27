@@ -57,22 +57,21 @@ Additionally, the illumina workflow takes advantage of the [Stenglein Lab Read P
 1. Clone the pipeline from github and move into the directory
 ```
 git clone https://github.com/tdunham19/OrbiSeq.git
-cd read_preprocessing
+cd OrbiSeq
 ```
-2. Create fastq, reference, and results directories 
+2. Create results directory
 ```
-mkdir fastq
 mkdir results
 ```
 3. Run the pipeline: must specify sequencing platform and where the reference file is located.  
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/reference/directory  -resume
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --fastq_dir /path/to/fastq/directory --reference /path/to/reference/directory  -resume
 ```
 
 ### Optional Deduplication 
 
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/reference/directory --collapse_duplicate_reads -resume
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --fastq_dir /path/to/fastq/directory --reference /path/to/reference/directory --collapse_duplicate_reads -resume
 ```
 
 ## Stopping and Resuming 
@@ -82,12 +81,12 @@ control(^) C
 ```
 - To resume the run add the -resume option
 ```
-Nextflow run main.nf --platform specify -resume
+Nextflow run main.nf --platform --fastq_dir --reference -resume
 ```
 
 ## Run Test Profile
 
 To run the test profile utilize the following code
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference /path/to/reference/directory --profile test -resume
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference ./reference/BTV/BTV_premade_refseq.fasta --profile test -resume
 ```
