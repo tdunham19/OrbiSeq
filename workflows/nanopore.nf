@@ -31,7 +31,7 @@ workflow NANOPORE_CONSENSUS {
 
   // fastq input files
 
-  Channel.fromFilePairs("${params.fastq_dir}/${params.input_pattern}", size: -1, checkIfExists: true, maxDepth: 1)
+  Channel.fromFilePairs("${params.fastq_dir}/${params.nanopore_input_pattern}", size: -1, checkIfExists: true, maxDepth: 1)
   .map{ name, reads ->
          def matcher = name =~ /^([^.]+)/
          def meta = [:]
