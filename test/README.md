@@ -2,7 +2,7 @@
 
 This directory contains small test datasets from BTV17 samples sequenced side-by-side on Illumina and Nanopore platforms. 
 
-Additionally metadata for the samples is included here with accession numbers from when this was originally sequenced in 2018: [minimal metadata](./test_metadata.xlsx)
+Additionally metadata for the samples is included here with accession numbers from when this was originally sequenced in 2018: [test metadata](./test_metadata.xlsx)
 
 These datasets include:
 
