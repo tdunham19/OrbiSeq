@@ -78,9 +78,16 @@ nextflow run main.nf --platform illumina --fastq_dir /path/to/fastq/directory --
 
 ## Testing
 
-To test if the pipeline is working properly the pipeline is provided with small test fastq files. To run the BTV illumina test datasets, run with profile test:
+To test if the pipeline is working properly the pipeline is provided with small test fastq files. 
+
+   To test the illumina workflow: 
 ```
-nextflow run main.nf --platform illumina -profile test -resume
+nextflow run main.nf -profile test_illumina -resume
+```
+
+   To test the nanopore workflow: 
+```
+nextflow run main.nf -profile test_nanopore -resume
 ```
 
 
