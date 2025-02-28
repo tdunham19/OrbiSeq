@@ -1,7 +1,6 @@
 work/
 results/
 /fastq/
-reference/
 summary/
 .nextflow.lo*
 .nextflow/
@@ -9,3 +8,6 @@ summary/
 /*.pdf
 *_archive/
 /*.gz
+/reference/*.fasta
+!/reference/BTV/*.fasta
+!/reference/EHDV/*.fasta
