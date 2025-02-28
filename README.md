@@ -1,24 +1,26 @@
 # OrbiSeq
-OrbiSeq is a Nextflow pipeline to analyze short and long sequences for Orbiviruses.
+OrbiSeq is a Nextflow pipeline to analyze short and long sequences for *Orbiviruses*.
 
 ## Contents
 - [Pipeline Overview](#Pipeline-Overview)
 - [Workflow Steps](#Workflow-Steps)
 - [Running the Pipeline](#Running-the-Pipeline)
 	- [Optional Deduplication](#Optional-Deduplication)
-- [Stopping and Resuming](#Stopping-and-Resuming)
 - [Run Test Profile](#Run-Test-Profile)
+- [Stopping and Resuming](#Stopping-and-Resuming)
+- [Dependencies](#Dependencies)
+
 
 ## Pipeline Overview
-OrbiSeq is a nextflow pipeline that will create consensus sequences for any Orbivirus with 10 segments from sequencing data produced with Illumina or Nanopore technologies. This pipeline has the capability to run premade reference files included with the pipeline or custom reference files uploaded by the user. 
+OrbiSeq is a nextflow pipeline that will perform alignment, variant calling, and create consensus sequences from Illumina or Nanopore sequence data for any *Orbivirus* with 10 segments. 
 
 ### Platform:
 
-This pipeline has the capability to run either Illumina or Nanopore sequencing data. When running this pipeline the user must specify which platform their data came from. 
+This pipeline has the capability to run either Illumina or Nanopore sequencing data. When running this pipeline the user must specify which platform their data came from by using the --platform parameter. 
 
 ### Reference:
 
-This pipeline can utlitize any reference genome from Orbiviruses with 10 segments. 
+This pipeline can utlitize any reference genome from Orbiviruses with 10 segments. To include a reference the user must specify where the file is located. 
 - Premade Reference Sequences 
 	- There are premade reference files for Bluetongue virus (BTV) and Epizootic hemorrhagic disease virus (EHDV). More information on the creation of these references can be found in [cite publication]. 
 		- The reference files for BTV and EHDV can be found in ./reference/BTV and ./reference/EHDV respectively. 
@@ -52,6 +54,7 @@ These workflows take advantage of nf-core [modules](https://nf-co.re/modules) fo
 
 Additionally, the illumina workflow takes advantage of the [Stenglein Lab Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing).
 
+
 ## Running the Pipeline
 
 1. Clone the pipeline from github and move into the directory
@@ -65,11 +68,21 @@ cd OrbiSeq
 nextflow run main.nf --platform ['illumina' or 'nanopore'] --fastq_dir /path/to/fastq/directory --reference /path/to/reference/directory  -resume
 ```
 
-### Optional Deduplication 
+
+### Optional Deduplication (Illumina only)
 
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --fastq_dir /path/to/fastq/directory --reference /path/to/reference/directory --collapse_duplicate_reads -resume
+nextflow run main.nf --platform illumina --fastq_dir /path/to/fastq/directory --reference /path/to/reference/directory --collapse_duplicate_reads -resume
 ```
+
+
+## Run Test Profile
+
+To run the test profile utilize the following code
+```
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference ./reference/BTV/BTV_premade_refseq.fasta --profile test -resume
+```
+
 
 ## Stopping and Resuming 
 - To stop the run
@@ -81,9 +94,10 @@ control(^) C
 Nextflow run main.nf --platform --fastq_dir --reference -resume
 ```
 
-## Run Test Profile
 
-To run the test profile utilize the following code
-```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference ./reference/BTV/BTV_premade_refseq.fasta --profile test -resume
-```
+## Dependencies
+To run the pipeline the user will need to be working on a computer that has nextflow and singularity installed.
+
+This pipeline requires nextflow version > 23.10
+
+There is no specified version of Singularity for this pipeline. The pipeline has been tested with singularity v3.9.9-bionic.
