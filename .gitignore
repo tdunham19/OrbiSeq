@@ -1,6 +1,6 @@
 work/
 results/
-fastq/
+/fastq/
 reference/
 summary/
 .nextflow.lo*
