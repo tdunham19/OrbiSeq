@@ -6,7 +6,7 @@ OrbiSeq is a Nextflow pipeline to analyze short and long sequences for *Orbiviru
 - [Workflow Steps](#Workflow-Steps)
 - [Running the Pipeline](#Running-the-Pipeline)
 	- [Optional Deduplication](#Optional-Deduplication)
-- [Run Test Profile](#Run-Test-Profile)
+- [Testing](#Testing)
 - [Stopping and Resuming](#Stopping-and-Resuming)
 - [Dependencies](#Dependencies)
 
@@ -76,11 +76,11 @@ nextflow run main.nf --platform illumina --fastq_dir /path/to/fastq/directory --
 ```
 
 
-## Run Test Profile
+## Testing
 
-To run the test profile utilize the following code
+To test if the pipeline is working properly the pipeline is provided with small test fastq files. To run the BTV illumina test datasets, run with profile test:
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --reference ./reference/BTV/BTV_premade_refseq.fasta --profile test -resume
+nextflow run main.nf --platform illumina -profile test -resume
 ```
 
 
