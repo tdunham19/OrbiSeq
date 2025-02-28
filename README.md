@@ -3,6 +3,7 @@ OrbiSeq is a Nextflow pipeline to analyze short and long sequences for *Orbiviru
 
 ## Contents
 - [Pipeline Overview](#Pipeline-Overview)
+- [Input Files](#Input-Files)
 - [Workflow Steps](#Workflow-Steps)
 - [Running the Pipeline](#Running-the-Pipeline)
 	- [Optional Deduplication](#Optional-Deduplication)
@@ -15,8 +16,15 @@ OrbiSeq is a Nextflow pipeline to analyze short and long sequences for *Orbiviru
 OrbiSeq is a nextflow pipeline that will perform alignment, variant calling, and create consensus sequences from Illumina or Nanopore sequence data for any *Orbivirus* with 10 segments. 
 
 ### Platform:
-
 This pipeline has the capability to run either Illumina or Nanopore sequencing data. When running this pipeline the user must specify which platform their data came from by using the --platform parameter. 
+
+
+## Input Files
+
+### Sequence Data:
+- Users will direct the pipeline where fastq files are located by using the fastq_dir parameter. Illumina and Nanopore data should not be run through the pipeline at the same time. 
+	- Illumina: Paired-end reads (R1 and R2)
+	- Nanopore: Users must concatenate raw read files into a single fastq.gz file. 
 
 ### Reference:
 
