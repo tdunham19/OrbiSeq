@@ -39,7 +39,7 @@ This pipeline can utlitize any reference genome from Orbiviruses with 10 segment
 - Align input reads to best10 RefSeq : bowtie2 build & align 
 - Process files : samtools & bcftools
 - Create consensus sequence : bcftools consensus
-- Align input reads to final consensu sequence : bowtie2 build & align 
+- Align input reads to final consensus sequence : bowtie2 build & align 
 
 ### Nanopore workflow 
 - Align input reads to large Orbi RefSeq : minimap2 align 
@@ -48,7 +48,7 @@ This pipeline can utlitize any reference genome from Orbiviruses with 10 segment
 - Align input reads to best10 RefSeq : minimap2 align 
 - Process files : samtools & bcftools
 - Create consensus sequence : bcftools consensus
-- Align input reads to final consensu sequence : minimap2 align 
+- Align input reads to final consensus sequence : minimap2 align 
 	
 These workflows take advantage of nf-core [modules](https://nf-co.re/modules) for many of these components and the overall [nf-core](https://nf-co.re/) design philosophy.
 
