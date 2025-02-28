@@ -3,6 +3,7 @@ include { ILLUMINA_CONSENSUS } from './workflows/illumina.nf'
 
 println "Selected platform: ${params.platform}"
 println "Selected reference: ${params.reference}"
+println "fastq directory: ${params.fastq_dir}"
 
 workflow {  
   
