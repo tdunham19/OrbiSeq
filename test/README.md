@@ -7,7 +7,7 @@ Additionally metadata for the samples is included here with accession numbers fr
 These datasets include:
 
 | dataset | platform | description |
-| ------- | -------- | 
+| ------- | -------- | ------- |
 | BTV17_illumina_subset | Illumina | BTV17 CO2018 |
 | BTV17_nanopore_subset | Illumina | BTV17 CO2018 |
 
