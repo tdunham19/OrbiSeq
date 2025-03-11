@@ -29,6 +29,9 @@ include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trail
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_FINAL	     } from '../modules/nf_core/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN_TO_FINAL           				     } from '../modules/nf_core/bowtie2/align/main.nf'
+include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/view/main.nf'
+include { SAMTOOLS_SORT  as SAMTOOLS_SORT_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/sort/main.nf'
+include { BCFTOOLS_MPILEUP as BCFTOOLS_MPILEUP_FINAL	     } from '../modules/nf_core/bcftools/mpileup/main.nf'
 
 workflow ILLUMINA_CONSENSUS {
 
@@ -121,6 +124,11 @@ workflow ILLUMINA_CONSENSUS {
    
   // re-align data against the new draft sequence (ie. final consensus sequence)
   BOWTIE2_ALIGN_TO_FINAL ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
+  
+  // call variants against final consensus sequence 
+  SAMTOOLS_VIEW_FINAL_ALIGNMENT ( BOWTIE2_ALIGN_TO_FINAL.out.sam )
+  SAMTOOLS_SORT_FINAL_ALIGNMENT ( SAMTOOLS_VIEW_FINAL_ALIGNMENT.out.bam )
+  BCFTOOLS_MPILEUP_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(BCFTOOLS_CONSENSUS.out.fa))
   
   }
   

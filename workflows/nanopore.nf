@@ -24,6 +24,9 @@ include { BCFTOOLS_CONSENSUS					 			 } from '../modules/nf_core/bcftools/consen
 include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
 include { MINIMAP2_ALIGN_TO_FINAL		  					 } from '../modules/nf_core/minimap2/align/main.nf'
+include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/view/main.nf'
+include { SAMTOOLS_SORT  as SAMTOOLS_SORT_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/sort/main.nf'
+include { BCFTOOLS_MPILEUP as BCFTOOLS_MPILEUP_FINAL	     } from '../modules/nf_core/bcftools/mpileup/main.nf'
 
 workflow NANOPORE_CONSENSUS {
 
@@ -107,7 +110,7 @@ workflow NANOPORE_CONSENSUS {
   BCFTOOLS_MPILEUP ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
   
   // this script creates a mask file
-  // this is necessary because otherwise bcftools consensus doesn't hanlde positions with no coverage well
+  // this is necessary because otherwise bcftools consensus doesnt hanlde positions with no coverage well
   CREATE_MASK_FILE ( BCFTOOLS_MPILEUP.out.vcf )
   
   // convert vcf -> compressed vcf to make bcftools happy
@@ -133,6 +136,11 @@ workflow NANOPORE_CONSENSUS {
   
   // re-minimap data against the new draft sequence (ie. final consensus sequence)
   MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(BCFTOOLS_CONSENSUS.out.fa))
+  
+  // call variants against final consensus sequence 
+  SAMTOOLS_VIEW_FINAL_ALIGNMENT ( MINIMAP2_ALIGN_TO_FINAL.out.sam )
+  SAMTOOLS_SORT_FINAL_ALIGNMENT ( SAMTOOLS_VIEW_FINAL_ALIGNMENT.out.bam )
+  BCFTOOLS_MPILEUP_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(BCFTOOLS_CONSENSUS.out.fa))
   
   }
   
