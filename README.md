@@ -4,6 +4,7 @@ OrbiSeq is a Nextflow pipeline to analyze short and long sequences for *Orbiviru
 ## Contents
 - [Pipeline Overview](#Pipeline-Overview)
 - [Input Files](#Input-Files)
+- [Output Files](#Output-Files)
 - [Workflow Steps](#Workflow-Steps)
 - [Running the Pipeline](#Running-the-Pipeline)
 	- [Optional Deduplication](#Optional-Deduplication)
@@ -21,20 +22,30 @@ This pipeline has the capability to run either Illumina or Nanopore sequencing d
 
 ## Input Files
 
-### Sequence Data:
+### Data:
 - Users will direct the pipeline where fastq files are located by using the fastq_dir parameter. Illumina and Nanopore data should not be run through the pipeline at the same time. 
-	- Illumina: Paired-end reads (R1 and R2)
-	- Nanopore: Users must concatenate raw read files into a single fastq.gz file. 
+	- Illumina: 
+		- Paired-end (R1 and R2) or single-end reads 
+	- Nanopore: 
+		- Users must concatenate raw read files into a single fastq.gz file. 
+		- The sequence summary file should be placed in the summary directory. 
 
 ### Reference:
 
-This pipeline can utlitize any reference genome from *Orbiviruses* with 10 segments. To include a reference the user must specify where the file is located. 
+This pipeline can utlitize any reference genome from *Orbiviruses* with 10 segments. To include a reference the user must specify where the file is located using the parameter --reference. 
 - Premade Reference Sequences 
 	- There are premade reference files for Bluetongue virus (BTV) and Epizootic hemorrhagic disease virus (EHDV). More information on the creation of these references can be found in [cite publication]. 
 		- The reference files for BTV and EHDV can be found in ./reference/BTV and ./reference/EHDV respectively. 
 - Custom Reference Sequences	
-	- The user is also able to upload their own custom reference file by placing it in the ./reference directory
+	- The user is also able to upload their own custom reference file. 
+	- When uploading custom reference sequences the user must ensure that the file is formatted correctly. It should be formatted as: segment#_sample_id (ex. s1_Genbank_Acession). Additionally there should be NO BLANK LINES throughout the document. 
 
+## Output files
+
+- The pipeline outputs a consensus sequence, alignment, and variant calling files. The files are located in the following results directories:
+	- Consensus sequence: {sample_id}_new_draft_seqs.fa in ./results/final
+	- Final alignment: {sample_id}_new_draft_seq.sam file in ./results/bowtie2 OR ./results/minimap2
+	- Variant calling: {sample_id}.vcf file in ./results/bcftools/
 
 ## Workflow Steps
 
@@ -48,6 +59,7 @@ This pipeline can utlitize any reference genome from *Orbiviruses* with 10 segme
 - Process files : samtools & bcftools
 - Create consensus sequence : bcftools consensus
 - Align input reads to final consensus sequence : bowtie2 build & align 
+- Call variants against final consensus sequence: bcftools mpileup
 
 ### Nanopore workflow 
 - Align input reads to large Orbi RefSeq : minimap2 align 
@@ -56,7 +68,8 @@ This pipeline can utlitize any reference genome from *Orbiviruses* with 10 segme
 - Align input reads to best10 RefSeq : minimap2 align 
 - Process files : samtools & bcftools
 - Create consensus sequence : bcftools consensus
-- Align input reads to final consensus sequence : minimap2 align 
+- Align input reads to final consensus sequence : minimap2 align
+- Call variants against final consensus sequence: bcftools mpileup
 	
 These workflows take advantage of nf-core [modules](https://nf-co.re/modules) for many of these components and the overall [nf-core](https://nf-co.re/) design philosophy.
 
