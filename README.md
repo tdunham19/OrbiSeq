@@ -28,7 +28,7 @@ This pipeline has the capability to run either Illumina or Nanopore sequencing d
 		- Paired-end (R1 and R2) or single-end reads 
 	- Nanopore: 
 		- Users must concatenate raw read files into a single fastq.gz file. 
-		- The sequence summary file should be placed in the summary directory. 
+		- The sequence summary file should be placed in the ./summary directory. 
 
 ### Reference:
 
