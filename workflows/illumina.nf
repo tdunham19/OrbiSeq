@@ -18,6 +18,7 @@ include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_BEST10_ALIGNMENT   } from '../modules/
 include { SAMTOOLS_SORT  as SAMTOOLS_SORT_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/sort/main.nf'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_BEST10_ALIGNMENT  } from '../modules/nf_core/samtools/index/main.nf'
 include { SAMTOOLS_FAIDX  							     	 } from '../modules/nf_core/samtools/faidx/main.nf'
+include { BEDTOOLS_BAMTOBED 								 } from '../modules/nf_core/bedtools/bamtobed/main.nf'
 include { BCFTOOLS_MPILEUP	 					   			 } from '../modules/nf_core/bcftools/mpileup/main.nf'
 include { CREATE_MASK_FILE				       			 	 } from '../modules/local/create_mask_file/main.nf'
 include { BCFTOOLS_VIEW	 					   			 	 } from '../modules/nf_core/bcftools/view/main.nf'
@@ -31,6 +32,7 @@ include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_FINAL	     } from '../modules/nf_
 include { BOWTIE2_ALIGN_TO_FINAL           				     } from '../modules/nf_core/bowtie2/align/main.nf'
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/view/main.nf'
 include { SAMTOOLS_SORT  as SAMTOOLS_SORT_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/sort/main.nf'
+include { BEDTOOLS_BAMTOBED as BEDTOOLS_BAMTOBED_FINAL		 } from '../modules/nf_core/bedtools/bamtobed/main.nf'
 include { BCFTOOLS_MPILEUP as BCFTOOLS_MPILEUP_FINAL	     } from '../modules/nf_core/bcftools/mpileup/main.nf'
 
 workflow ILLUMINA_CONSENSUS {
@@ -92,8 +94,14 @@ workflow ILLUMINA_CONSENSUS {
   // have to make a .fai file to make mpileup happy - faidx allows for fast random access for reference files in fasta format 
   SAMTOOLS_FAIDX ( IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa )
   
+  // have to make a .bed file to make mpileup happy 
+  BEDTOOLS_BAMTOBED ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam )
+ 
   // bcftools mpileup calls variants -> output is a vcf file
-  BCFTOOLS_MPILEUP ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
+  BCFTOOLS_MPILEUP ( 
+  	SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam.join(BEDTOOLS_BAMTOBED.out.bed).join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa),
+  	params.save_mpileup
+  )
 
   // this script creates a mask file which is necessary because otherwise bcftools consensus doesnt hanlde positions with no coverage well
   CREATE_MASK_FILE ( BCFTOOLS_MPILEUP.out.vcf )
@@ -127,8 +135,12 @@ workflow ILLUMINA_CONSENSUS {
   
   // call variants against final consensus sequence 
   SAMTOOLS_VIEW_FINAL_ALIGNMENT ( BOWTIE2_ALIGN_TO_FINAL.out.sam )
-  SAMTOOLS_SORT_FINAL_ALIGNMENT ( SAMTOOLS_VIEW_FINAL_ALIGNMENT.out.bam )
-  BCFTOOLS_MPILEUP_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(BCFTOOLS_CONSENSUS.out.fa))
+  SAMTOOLS_SORT_FINAL_ALIGNMENT ( SAMTOOLS_VIEW_FINAL_ALIGNMENT.out.bam )  
+  BEDTOOLS_BAMTOBED_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam )
+  BCFTOOLS_MPILEUP_FINAL ( 
+  	SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(BEDTOOLS_BAMTOBED_FINAL.out.bed).join(BCFTOOLS_CONSENSUS.out.fa),
+  	params.save_mpileup
+  )
   
   }
   
