@@ -40,7 +40,7 @@ process BCFTOOLS_MPILEUP {
         $intervals_cmd \\
         -Ou \\
         $mpileup \\
-        | bcftools call -c --output-type v $args2 \\
+        | bcftools call -c -Oz --output-type v $args2 \\
         | bcftools reheader --samples sample_name.list \\
         | bcftools view --output-file ${prefix}.vcf.gz --output-type z $args3
 

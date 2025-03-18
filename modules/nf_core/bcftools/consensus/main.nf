@@ -1,6 +1,6 @@
 process BCFTOOLS_CONSENSUS {
     tag "$meta.id"
-    label 'process_medium'
+    // label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -11,7 +11,7 @@ process BCFTOOLS_CONSENSUS {
     tuple val(meta), path(vcf), path(tbi), path(fasta), path(mask)
 
     output:
-    tuple val(meta), path('*.fa'), emit: fasta
+    tuple val(meta), path('*.fa'), emit: fa
     path  "versions.yml"         , emit: versions
 
     when:
@@ -20,15 +20,14 @@ process BCFTOOLS_CONSENSUS {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def masking = mask ? "-m $mask" : ""
     """
-    cat $fasta \\
-        | bcftools \\
-            consensus \\
-            $vcf \\
-            $args \\
-            $masking \\
-            > ${prefix}.fa
+    bcftools \\
+        consensus \\
+        -f $fasta \\
+        $vcf \\
+        $args \\
+        -m $mask \\
+        > ${prefix}.fa
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -39,7 +38,6 @@ process BCFTOOLS_CONSENSUS {
     stub:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def masking = mask ? "-m $mask" : ""
     """
     touch ${prefix}.fa
 

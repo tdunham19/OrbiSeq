@@ -107,13 +107,13 @@ workflow ILLUMINA_CONSENSUS {
   BCFTOOLS_CONSENSUS ( BCFTOOLS_MPILEUP.out.vcf.join(BCFTOOLS_INDEX.out.tbi).join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa).join(CREATE_MASK_FILE.out.mask)) 
 
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
-  REMOVE_TRAILING_FASTA_NS ( BCFTOOLS_CONSENSUS.out.fasta )
+  REMOVE_TRAILING_FASTA_NS ( BCFTOOLS_CONSENSUS.out.fa )
   
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
   FINAL_CONSENSUS_SEQUENCE ( REMOVE_TRAILING_FASTA_NS.out.fa )
   
   // make bowtie2 index for final alignment
-  BOWTIE2_BUILD_INDEX_FINAL ( BCFTOOLS_CONSENSUS.out.fasta )
+  BOWTIE2_BUILD_INDEX_FINAL ( BCFTOOLS_CONSENSUS.out.fa )
    
   // re-align data against the new draft sequence (ie. final consensus sequence)
   BOWTIE2_ALIGN_TO_FINAL ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
@@ -123,7 +123,7 @@ workflow ILLUMINA_CONSENSUS {
   SAMTOOLS_SORT_FINAL_ALIGNMENT ( SAMTOOLS_VIEW_FINAL_ALIGNMENT.out.bam )  
   BEDTOOLS_BAMTOBED_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam )
   BCFTOOLS_MPILEUP_FINAL ( 
-  	SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(BEDTOOLS_BAMTOBED_FINAL.out.bed).join(BCFTOOLS_CONSENSUS.out.fasta),
+  	SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(BEDTOOLS_BAMTOBED_FINAL.out.bed).join(BCFTOOLS_CONSENSUS.out.fa),
   	params.save_mpileup
   )
   
