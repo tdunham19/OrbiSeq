@@ -30,7 +30,7 @@ process BCFTOOLS_MPILEUP {
     def bgzip_mpileup = save_mpileup ? "bgzip ${prefix}.mpileup" : ""
     def intervals_cmd = intervals ? "-T ${intervals}" : ""
     """
-    echo "${meta.id}" > ${meta.id}.list
+    echo "${meta.id}" > sample_name.list
 
     bcftools \\
         mpileup \\
@@ -38,9 +38,10 @@ process BCFTOOLS_MPILEUP {
         $args \\
         $bam \\
         $intervals_cmd \\
+        -Ou \\
         $mpileup \\
-        | bcftools call --output-type v $args2 \\
-        | bcftools reheader --samples ${meta.id}.list \\
+        | bcftools call -c --output-type v $args2 \\
+        | bcftools reheader --samples sample_name.list \\
         | bcftools view --output-file ${prefix}.vcf.gz --output-type z $args3
 
     $bgzip_mpileup
