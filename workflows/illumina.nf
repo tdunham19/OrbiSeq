@@ -18,10 +18,12 @@ include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_BEST10_ALIGNMENT   } from '../modules/
 include { SAMTOOLS_SORT  as SAMTOOLS_SORT_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/sort/main.nf'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_BEST10_ALIGNMENT  } from '../modules/nf_core/samtools/index/main.nf'
 include { SAMTOOLS_FAIDX  							     	 } from '../modules/nf_core/samtools/faidx/main.nf'
-include { BEDTOOLS_BAMTOBED 								 } from '../modules/nf_core/bedtools/bamtobed/main.nf'
 include { BCFTOOLS_MPILEUP	 					   			 } from '../modules/nf_core/bcftools/mpileup/main.nf'
-include { BCFTOOLS_INDEX 			 						 } from '../modules/nf_core/bcftools/index/main.nf'
 include { CREATE_MASK_FILE				       			 	 } from '../modules/local/create_mask_file/main.nf'
+include { BCFTOOLS_VIEW	 					   			 	 } from '../modules/nf_core/bcftools/view/main.nf'
+include { BCFTOOLS_INDEX as BCFTOOLS_INDEX_BCF	 			 } from '../modules/nf_core/bcftools/index/main.nf'
+include { BCFTOOLS_CALL 	 				   			 	 } from '../modules/nf_core/bcftools/call/main.nf'
+include { BCFTOOLS_INDEX as BCFTOOLS_INDEX_CONS	 			 } from '../modules/nf_core/bcftools/index/main.nf'
 include { BCFTOOLS_CONSENSUS					 			 } from '../modules/nf_core/bcftools/consensus/main.nf'
 include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
@@ -29,7 +31,6 @@ include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_FINAL	     } from '../modules/nf_
 include { BOWTIE2_ALIGN_TO_FINAL           				     } from '../modules/nf_core/bowtie2/align/main.nf'
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/view/main.nf'
 include { SAMTOOLS_SORT  as SAMTOOLS_SORT_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/sort/main.nf'
-include { BEDTOOLS_BAMTOBED as BEDTOOLS_BAMTOBED_FINAL		 } from '../modules/nf_core/bedtools/bamtobed/main.nf'
 include { BCFTOOLS_MPILEUP as BCFTOOLS_MPILEUP_FINAL	     } from '../modules/nf_core/bcftools/mpileup/main.nf'
 
 workflow ILLUMINA_CONSENSUS {
@@ -91,21 +92,27 @@ workflow ILLUMINA_CONSENSUS {
   // have to make a .fai file to make mpileup happy - faidx allows for fast random access for reference files in fasta format 
   SAMTOOLS_FAIDX ( IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa )
   
-  // have to make a .bed file to make mpileup happy 
-  BEDTOOLS_BAMTOBED ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam )
- 
   // bcftools mpileup calls variants -> output is a vcf file
-  BCFTOOLS_MPILEUP ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam.join(BEDTOOLS_BAMTOBED.out.bed).join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa), params.save_mpileup )
-    
-  // need to make an indexed cons.vcf.gz file to make other bcftools commands happy
-  BCFTOOLS_INDEX ( BCFTOOLS_MPILEUP.out.vcf )
-  
+  BCFTOOLS_MPILEUP ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
+
   // this script creates a mask file which is necessary because otherwise bcftools consensus doesnt hanlde positions with no coverage well
   CREATE_MASK_FILE ( BCFTOOLS_MPILEUP.out.vcf )
+
+  // convert vcf -> compressed vcf to make bcftools happy
+  BCFTOOLS_VIEW ( BCFTOOLS_MPILEUP.out.vcf ) 
+  
+  // need to make an indexed vcf file to make other bcftools commands happy
+  BCFTOOLS_INDEX_BCF ( BCFTOOLS_VIEW.out.gz )
+  
+  // bcftools call creates a new vcf file that has consensus bases 
+  BCFTOOLS_CALL ( BCFTOOLS_INDEX_BCF.out.gz_and_csi )
+  
+  // need to make an indexed cons.vcf.gz file to make other bcftools commands happy
+  BCFTOOLS_INDEX_CONS ( BCFTOOLS_CALL.out.vcf )
   
   // bcftools consensus will output a fasta file containing new draft consensus sequence based on called variants
-  BCFTOOLS_CONSENSUS ( BCFTOOLS_MPILEUP.out.vcf.join(BCFTOOLS_INDEX.out.tbi).join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa).join(CREATE_MASK_FILE.out.mask)) 
-
+  BCFTOOLS_CONSENSUS ( CREATE_MASK_FILE.out.mask.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa).join(BCFTOOLS_INDEX_CONS.out.gz_and_csi)) 
+  
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
   REMOVE_TRAILING_FASTA_NS ( BCFTOOLS_CONSENSUS.out.fa )
   
@@ -120,12 +127,8 @@ workflow ILLUMINA_CONSENSUS {
   
   // call variants against final consensus sequence 
   SAMTOOLS_VIEW_FINAL_ALIGNMENT ( BOWTIE2_ALIGN_TO_FINAL.out.sam )
-  SAMTOOLS_SORT_FINAL_ALIGNMENT ( SAMTOOLS_VIEW_FINAL_ALIGNMENT.out.bam )  
-  BEDTOOLS_BAMTOBED_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam )
-  BCFTOOLS_MPILEUP_FINAL ( 
-  	SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(BEDTOOLS_BAMTOBED_FINAL.out.bed).join(BCFTOOLS_CONSENSUS.out.fa),
-  	params.save_mpileup
-  )
+  SAMTOOLS_SORT_FINAL_ALIGNMENT ( SAMTOOLS_VIEW_FINAL_ALIGNMENT.out.bam )
+  BCFTOOLS_MPILEUP_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(BCFTOOLS_CONSENSUS.out.fa))
   
   }
   

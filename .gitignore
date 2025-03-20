@@ -1,6 +1,7 @@
 work/
 results/
 /fastq/
+/other_fastq/
 summary/
 .nextflow.lo*
 .nextflow/
