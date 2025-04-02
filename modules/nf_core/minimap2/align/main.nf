@@ -80,3 +80,34 @@ cat <<-END_VERSIONS > versions.yml
     END_VERSIONS
 """
 }
+
+process MINIMAP2_ALIGN {
+tag "$meta.id"
+
+  conda "${moduleDir}/environment.yml"
+  container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/mulled-v2-66534bcbb7031a148b13e2ad42583020b9cd25c4:3161f532a5ea6f1dec9be5667c9efc2afdac6104-0' :
+        'biocontainers/mulled-v2-66534bcbb7031a148b13e2ad42583020b9cd25c4:3161f532a5ea6f1dec9be5667c9efc2afdac6104-0' }"
+
+  input:
+  tuple val(meta),  path(reads), path(refseq)
+  val (suffix) // filename suffix
+
+  output:
+  tuple val(meta), path("*.sam")                       , emit: sam
+  tuple val(meta), path("*.bam")                       , emit: bam
+  tuple val(meta), path(refseq)                        , emit: refseq
+  path ("versions.yml")                                , emit: versions
+
+  script:
+  """
+  minimap2 -ax map-ont $refseq $reads | samtools view -h -F 4 > ${meta.id}.${suffix}.sam 
+  samtools sort -O bam ${meta.id}.${suffix}.sam > ${meta.id}.${suffix}.bam
+
+  cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        minimap2: \$(minimap2 --version 2>&1)
+        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+    END_VERSIONS
+  """
+}
