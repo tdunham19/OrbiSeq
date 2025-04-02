@@ -17,7 +17,7 @@ tuple val(meta), path("*.sam")                       , emit: sam
 
 script:
 """
-minimap2 -ax map-ont $reference $reads > ${meta.id}.sam 
+minimap2 -ax map-ont $reference $reads | samtools view -h -F 4 > ${meta.id}.sam 
 
 cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -45,7 +45,7 @@ tuple val(meta), path("*.sam")                       , emit: sam
 
 script:
 """
-minimap2 -ax map-ont $input $reads > ${meta.id}_alignment_best10.sam 
+minimap2 -ax map-ont $input $reads | samtools view -h -F 4 > ${meta.id}_alignment_best10.sam 
 
 cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -71,7 +71,7 @@ tuple val(meta), path("*.sam")                       , emit: sam
 
 script:
 """
-minimap2 -ax map-ont $input $reads > ${meta.id}_alignment_new_draft_seq.sam 
+minimap2 -ax map-ont $input $reads | samtools view -h -F 4 > ${meta.id}_alignment_new_draft_seq.sam 
 
 cat <<-END_VERSIONS > versions.yml
     "${task.process}":
