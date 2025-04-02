@@ -28,7 +28,7 @@ cat <<-END_VERSIONS > versions.yml
 }
 
 
-process MINIMAP2_ALIGN_TO_NEW_DRAFT {
+process MINIMAP2_ALIGN_TO_BEST10 {
 	tag "$meta.id"
 	// label "no_publish"
 
