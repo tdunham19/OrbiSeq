@@ -5,11 +5,14 @@ nextflow.enable.dsl=2
 // include modules: local, nf-core, and Stenglein lab
 include { PYCOQC										 	 } from '../modules/nf_core/pycoqc/main.nf'
 include { MINIMAP2_ALIGN_TO_EXISTING  	 				     } from '../modules/nf_core/minimap2/align/main.nf'
-include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_ALIGNMENT    		 } from '../modules/nf_core/samtools/view/main.nf'
-include { SAMTOOLS_SORT  as SAMTOOLS_SORT_ALIGNMENT    		 } from '../modules/nf_core/samtools/sort/main.nf'
-include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_ALIGNMENT  		 } from '../modules/nf_core/samtools/index/main.nf'
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 } from '../modules/local/identify_best_segments_from_sam/main.nf'
-include { MINIMAP2_ALIGN_TO_NEW_DRAFT  						 } from '../modules/nf_core/minimap2/align/main.nf'
+include { MINIMAP2_ALIGN_TO_BEST10     						 } from '../modules/nf_core/minimap2/align/main.nf'
+
+include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              } from '../subworkflows/call_individual_consensus.nf'
+
+include { CONCATENATE_FILES as CONCATENATE_VC_FILES       } from '../modules/stenglein_lab/concatenate_files/main.nf'
+include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES     } from '../modules/stenglein_lab/concatenate_files/main.nf'
+
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/view/main.nf'
 include { SAMTOOLS_SORT  as SAMTOOLS_SORT_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/sort/main.nf'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_BEST10_ALIGNMENT  } from '../modules/nf_core/samtools/index/main.nf'
@@ -75,72 +78,55 @@ workflow NANOPORE_CONSENSUS {
   // run minimap2 on input reads
   MINIMAP2_ALIGN_TO_EXISTING ( ch_reads, ch_reference )
   
-  // run samtools to process minimap2 alignment - view
-  SAMTOOLS_VIEW_ALIGNMENT ( MINIMAP2_ALIGN_TO_EXISTING.out.sam )
-  
-  // run samtools to process minimap2 alignment - sort
-  SAMTOOLS_SORT_ALIGNMENT ( SAMTOOLS_VIEW_ALIGNMENT.out.bam )
-  
-  // run samtools to process minimap2 alignment - index
-  SAMTOOLS_INDEX_ALIGNMENT ( SAMTOOLS_SORT_ALIGNMENT.out.bam )
-  
   // extract new fasta file containing best aligned-to seqs for this dataset
   IDENTIFY_BEST_SEGMENTS_FROM_SAM ( MINIMAP2_ALIGN_TO_EXISTING.out.sam, ch_reference )
   
   // re-minimap data against best 10 BTV ref seqs.
-  MINIMAP2_ALIGN_TO_NEW_DRAFT ( ch_reads.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
+  MINIMAP2_ALIGN_TO_BEST10 ( ch_reads.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
   
   // run samtools to process minimap2 alignment again - view
-  SAMTOOLS_VIEW_BEST10_ALIGNMENT ( MINIMAP2_ALIGN_TO_NEW_DRAFT.out.sam )
-  
+  SAMTOOLS_VIEW_BEST10_ALIGNMENT ( MINIMAP2_ALIGN_TO_BEST10.out.sam )
+
   // run samtools to process minimap2 alignment again - sort
   SAMTOOLS_SORT_BEST10_ALIGNMENT ( SAMTOOLS_VIEW_BEST10_ALIGNMENT.out.bam )
   
    // run samtools to process minimap2 alignment - index
   SAMTOOLS_INDEX_BEST10_ALIGNMENT ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam )
   
-  
-  // commands below create "new" consensus sequences
-  
-  
-  // have to make a .fai file to make mpileup happy
-  SAMTOOLS_FAIDX ( IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa )
-  
-  // lofreq calls variants -> output is a vcf file
-  BCFTOOLS_MPILEUP ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
-  
-  // this script creates a mask file
-  // this is necessary because otherwise bcftools consensus doesnt hanlde positions with no coverage well
-  CREATE_MASK_FILE ( BCFTOOLS_MPILEUP.out.vcf )
-  
-  // convert vcf -> compressed vcf to make bcftools happy
-  BCFTOOLS_VIEW ( BCFTOOLS_MPILEUP.out.vcf ) 
-  
-  // need to make an indexed vcf file to make other bcftools commands happy
-  BCFTOOLS_INDEX_BCF ( BCFTOOLS_VIEW.out.gz )
-  
-  // bcftools call creates a new vcf file that has consensus bases 
-  BCFTOOLS_CALL ( BCFTOOLS_INDEX_BCF.out.gz_and_csi )
-  
-  // need to make an indexed cons.vcf.gz file to make other bcftools commands happy
-  BCFTOOLS_INDEX_CONS ( BCFTOOLS_CALL.out.vcf )
-  
-  // bcftools consensus will output a fasta file containing new draft consensus sequence based on called variants
-  BCFTOOLS_CONSENSUS ( CREATE_MASK_FILE.out.mask.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa).join(BCFTOOLS_INDEX_CONS.out.gz_and_csi)) 
-  
-  // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
-  REMOVE_TRAILING_FASTA_NS ( BCFTOOLS_CONSENSUS.out.fa )
-  
+  // split up best10 segments into individual sequences because virus-focused 
+  // consensus callers (namely iVar and viral_consensus) only work on one
+  // sequence at a time
+  // see: https://www.nextflow.io/docs/latest/reference/operator.html#splitfasta
+  IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa
+    .splitFasta(by: 1, file: true, elem: 1)
+    .set { ch_best10_individual_fasta }
+
+  // this uses the nextflow combine operator to create a new channel
+  // that contains the reads for each dataset and all individual fasta files 
+  individual_fasta_ch = ch_reads.combine(ch_best10_individual_fasta, by: 0)
+	  
+  // parameters related consensus calling: min depth, basecall quality, frequency for consensus calling
+  min_depth_ch = Channel.value(params.nanopore_min_depth)
+  min_qual_ch  = Channel.value(params.nanopore_min_qual)
+  min_freq_ch  = Channel.value(params.nanopore_min_freq)
+  CALL_INDIVIDUAL_CONSENSUS_NANOPORE(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
+
+  // collect individual consensus sequences and combine into single files
+  collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta.groupTuple()
+  collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.ivar_fasta.groupTuple()
+  CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
+  CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
+
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
-  FINAL_CONSENSUS_SEQUENCE ( REMOVE_TRAILING_FASTA_NS.out.fa )
+  FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_IVAR_FILES.out.file )
   
   // re-minimap data against the new draft sequence (ie. final consensus sequence)
-  MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(BCFTOOLS_CONSENSUS.out.fa))
+  MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE.out.fa))
   
   // call variants against final consensus sequence 
   SAMTOOLS_VIEW_FINAL_ALIGNMENT ( MINIMAP2_ALIGN_TO_FINAL.out.sam )
   SAMTOOLS_SORT_FINAL_ALIGNMENT ( SAMTOOLS_VIEW_FINAL_ALIGNMENT.out.bam )
-  BCFTOOLS_MPILEUP_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(BCFTOOLS_CONSENSUS.out.fa))
+  BCFTOOLS_MPILEUP_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(FINAL_CONSENSUS_SEQUENCE.out.fa))
   
   }
   
