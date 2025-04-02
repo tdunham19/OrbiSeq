@@ -4,18 +4,47 @@
 #
 # Mark Stenglein 12/2015
 
+my $seq = "";
+
+# trim Ns from ends of seq and output
+sub trim_and_output_seq {
+   my $this_seq = shift @_;
+	# trim Ns from beginning
+   $this_seq =~ s/^N+//g;
+	# trim Ns from end
+   $this_seq =~ s/N+$//g;
+	# output
+   print "$this_seq\n";
+}
+
+# read from stdin
 while (<>)
 {
   chomp;
+
+  # header line
   if (/^>/)
   {
+	  # output previous sequence if defined
+	  if ($seq ne "")
+	  {
+	     trim_and_output_seq($seq);
+	     $seq = "";
+	  }
+	  
+	  # output this header line
      print "$_\n";
   }
   else
   {
-     my $seq = $_;
-     $seq =~ s/^N+//g;
-     $seq =~ s/N+$//g;
-     print "$seq\n";
+	  # read one sequence line and append to sequence
+     my $seq_line = $_;
+	  $seq .= $seq_line;
   }
+}
+
+# output final sequence
+if ($seq ne "")
+{
+  trim_and_output_seq($seq);
 }
