@@ -7,7 +7,7 @@ workflow CALL_INDIVIDUAL_CONSENSUS_ILLUMINA {
 
  take:
   reads_refseq       // tuple val (meta), path(reads), path(refseq)
-  refseq      		 // tuple val (meta), path(refseq)
+  refseq             // tuple val (meta), path(refseq)
   min_qual
   min_depth
   min_freq
@@ -25,7 +25,7 @@ workflow CALL_INDIVIDUAL_CONSENSUS_ILLUMINA {
   ch_versions = ch_versions.mix ( BOWTIE2_ALIGN.out.versions )      
 
   // call consensus using viral_consensus
-  VIRAL_CONSENSUS(BOWTIE2_ALIGN.out.bam.join(BOWTIE2_ALIGN.out.refseq), min_qual, min_depth, min_freq)
+  VIRAL_CONSENSUS(BOWTIE2_ALIGN.out.bam.join(refseq), min_qual, min_depth, min_freq)
   ch_versions = ch_versions.mix ( VIRAL_CONSENSUS.out.versions )      
 
   // call consensus using ivar

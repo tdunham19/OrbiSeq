@@ -41,7 +41,7 @@ workflow ILLUMINA_CONSENSUS {
    // use Stenglein lab read_preprocessing pipeline 
   PREPROCESS_READS(params.fastq_dir, params.input_pattern, params.collapse_duplicate_reads)
   
-  // Build bowtie2 index
+  // build bowtie2 index
   BOWTIE2_BUILD_INDEX_EXISTING ( ch_reference )
     
   // run bowtie2-align on input reads with large reference  
@@ -51,8 +51,11 @@ workflow ILLUMINA_CONSENSUS {
   // extract new fasta file containing best aligned-to seqs for this dataset
   IDENTIFY_BEST_SEGMENTS_FROM_SAM ( BOWTIE2_ALIGN_TO_EXISTING.out.sam, ch_reference )
   
+  // build bowtie2 index
+  BOWTIE2_BUILD_INDEX_BEST10 ( IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa )
+  
   // re-align data against best 10 BTV ref seqs using bowtie2.
-  BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_processed_reads.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
+  BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_BEST10.out.index))
   
   // split up best10 segments into individual sequences because virus-focused 
   // consensus callers (namely iVar and viral_consensus) only work on one
@@ -82,7 +85,7 @@ workflow ILLUMINA_CONSENSUS {
   FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_IVAR_FILES.out.file )
   
   // make bowtie2 index for final alignment
-  BOWTIE2_BUILD_INDEX_FINAL ( BCFTOOLS_CONSENSUS.out.fa )
+  BOWTIE2_BUILD_INDEX_FINAL ( FINAL_CONSENSUS_SEQUENCE.out.fa )
    
   // re-align data against the new draft sequence (ie. final consensus sequence) using bowtie2. 
   BOWTIE2_ALIGN_TO_FINAL ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
@@ -90,7 +93,7 @@ workflow ILLUMINA_CONSENSUS {
   // call variants against final consensus sequence 
   SAMTOOLS_VIEW_FINAL_ALIGNMENT ( BOWTIE2_ALIGN_TO_FINAL.out.sam )
   SAMTOOLS_SORT_FINAL_ALIGNMENT ( SAMTOOLS_VIEW_FINAL_ALIGNMENT.out.bam )
-  BCFTOOLS_MPILEUP_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(BCFTOOLS_CONSENSUS.out.fa))
+  BCFTOOLS_MPILEUP_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(FINAL_CONSENSUS_SEQUENCE.out.fa))
   
   }
   
