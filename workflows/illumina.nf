@@ -8,24 +8,14 @@ include { PREPROCESS_READS 									 } from '../subworkflows/stenglein_lab/prepr
 // include other modules: local, nf-core, and Stenglein lab
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_EXISTING      } from '../modules/nf_core/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN_TO_EXISTING  		 				 } from '../modules/nf_core/bowtie2/align/main.nf'
-include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_ALIGNMENT    		 } from '../modules/nf_core/samtools/view/main.nf'
-include { SAMTOOLS_SORT  as SAMTOOLS_SORT_ALIGNMENT    		 } from '../modules/nf_core/samtools/sort/main.nf'
-include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_ALIGNMENT  		 } from '../modules/nf_core/samtools/index/main.nf'
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 } from '../modules/local/identify_best_segments_from_sam/main.nf'
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_BEST10        } from '../modules/nf_core/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN_TO_NEW_DRAFT   	 				     } from '../modules/nf_core/bowtie2/align/main.nf'
-include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/view/main.nf'
-include { SAMTOOLS_SORT  as SAMTOOLS_SORT_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/sort/main.nf'
-include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_BEST10_ALIGNMENT  } from '../modules/nf_core/samtools/index/main.nf'
-include { SAMTOOLS_FAIDX  							     	 } from '../modules/nf_core/samtools/faidx/main.nf'
-include { BCFTOOLS_MPILEUP	 					   			 } from '../modules/nf_core/bcftools/mpileup/main.nf'
-include { CREATE_MASK_FILE				       			 	 } from '../modules/local/create_mask_file/main.nf'
-include { BCFTOOLS_VIEW	 					   			 	 } from '../modules/nf_core/bcftools/view/main.nf'
-include { BCFTOOLS_INDEX as BCFTOOLS_INDEX_BCF	 			 } from '../modules/nf_core/bcftools/index/main.nf'
-include { BCFTOOLS_CALL 	 				   			 	 } from '../modules/nf_core/bcftools/call/main.nf'
-include { BCFTOOLS_INDEX as BCFTOOLS_INDEX_CONS	 			 } from '../modules/nf_core/bcftools/index/main.nf'
-include { BCFTOOLS_CONSENSUS					 			 } from '../modules/nf_core/bcftools/consensus/main.nf'
-include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
+
+include { CALL_INDIVIDUAL_CONSENSUS_ILLUMINA              	 } from '../subworkflows/call_individual_consensus_illumina.nf'
+
+include { CONCATENATE_FILES as CONCATENATE_VC_FILES          } from '../modules/stenglein_lab/concatenate_files/main.nf'
+include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES        } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_FINAL	     } from '../modules/nf_core/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN_TO_FINAL           				     } from '../modules/nf_core/bowtie2/align/main.nf'
@@ -47,8 +37,8 @@ workflow ILLUMINA_CONSENSUS {
             [meta2, reference]
         }
     .set { ch_reference } 
-
-  // use Stenglein lab read_preprocessing pipeline 
+  
+   // use Stenglein lab read_preprocessing pipeline 
   PREPROCESS_READS(params.fastq_dir, params.input_pattern, params.collapse_duplicate_reads)
   
   // Build bowtie2 index
@@ -57,72 +47,44 @@ workflow ILLUMINA_CONSENSUS {
   // run bowtie2-align on input reads with large reference  
   ch_processed_reads = PREPROCESS_READS.out.reads
   BOWTIE2_ALIGN_TO_EXISTING (ch_processed_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index )
-
-  // run samtools to process bowtie2 alignment - view converts .sam to .bam 
-  SAMTOOLS_VIEW_ALIGNMENT ( BOWTIE2_ALIGN_TO_EXISTING.out.sam )
-  
-  // run samtools to process bowtie2 alignment - sort will sort the .bam alignment
-  SAMTOOLS_SORT_ALIGNMENT ( SAMTOOLS_VIEW_ALIGNMENT.out.bam )
-  
-  // run samtools to process bowtie2 alignment - index allows for fast random access for alignment files
-  SAMTOOLS_INDEX_ALIGNMENT ( SAMTOOLS_SORT_ALIGNMENT.out.bam )
   
   // extract new fasta file containing best aligned-to seqs for this dataset
   IDENTIFY_BEST_SEGMENTS_FROM_SAM ( BOWTIE2_ALIGN_TO_EXISTING.out.sam, ch_reference )
   
-  // build bowtie index for best 10 BTV ref seqs.
-  BOWTIE2_BUILD_INDEX_BEST10 ( IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa )
+  // re-align data against best 10 BTV ref seqs using bowtie2.
+  BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_processed_reads.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
   
-  // re-align data against best 10 BTV ref seqs.
-  BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_BEST10.out.index) )
-  
-  // run samtools to process bowtie2 alignment again - view converts .sam to .bam 
-  SAMTOOLS_VIEW_BEST10_ALIGNMENT ( BOWTIE2_ALIGN_TO_NEW_DRAFT.out.sam )
-  
-  // run samtools to process bowtie2 alignment again - sort will sort the .bam alignment
-  SAMTOOLS_SORT_BEST10_ALIGNMENT ( SAMTOOLS_VIEW_BEST10_ALIGNMENT.out.bam )
-  
-   // run samtools to process bowtie2 alignment - index allows for fast random access for alignment files
-  SAMTOOLS_INDEX_BEST10_ALIGNMENT ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam )
-  
-  
-  // commands below create new consensus sequences
-  
-  
-  // have to make a .fai file to make mpileup happy - faidx allows for fast random access for reference files in fasta format 
-  SAMTOOLS_FAIDX ( IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa )
-  
-  // bcftools mpileup calls variants -> output is a vcf file
-  BCFTOOLS_MPILEUP ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
+  // split up best10 segments into individual sequences because virus-focused 
+  // consensus callers (namely iVar and viral_consensus) only work on one
+  // sequence at a time
+  // see: https://www.nextflow.io/docs/latest/reference/operator.html#splitfasta
+  IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa
+    .splitFasta(by: 1, file: true, elem: 1)
+    .set { ch_best10_individual_fasta }
 
-  // this script creates a mask file which is necessary because otherwise bcftools consensus doesnt hanlde positions with no coverage well
-  CREATE_MASK_FILE ( BCFTOOLS_MPILEUP.out.vcf )
+  // this uses the nextflow combine operator to create a new channel
+  // that contains the reads for each dataset and all individual fasta files 
+  individual_fasta_ch = ch_processed_reads.combine(ch_best10_individual_fasta, by: 0)
+	  
+  // parameters related consensus calling: min depth, basecall quality, frequency for consensus calling
+  min_depth_ch = Channel.value(params.illumina_min_depth)
+  min_qual_ch  = Channel.value(params.illumina_min_qual)
+  min_freq_ch  = Channel.value(params.illumina_min_freq)
+  CALL_INDIVIDUAL_CONSENSUS_ILLUMINA(individual_fasta_ch, ch_best10_individual_fasta, min_depth_ch, min_qual_ch, min_freq_ch)
 
-  // convert vcf -> compressed vcf to make bcftools happy
-  BCFTOOLS_VIEW ( BCFTOOLS_MPILEUP.out.vcf ) 
-  
-  // need to make an indexed vcf file to make other bcftools commands happy
-  BCFTOOLS_INDEX_BCF ( BCFTOOLS_VIEW.out.gz )
-  
-  // bcftools call creates a new vcf file that has consensus bases 
-  BCFTOOLS_CALL ( BCFTOOLS_INDEX_BCF.out.gz_and_csi )
-  
-  // need to make an indexed cons.vcf.gz file to make other bcftools commands happy
-  BCFTOOLS_INDEX_CONS ( BCFTOOLS_CALL.out.vcf )
-  
-  // bcftools consensus will output a fasta file containing new draft consensus sequence based on called variants
-  BCFTOOLS_CONSENSUS ( CREATE_MASK_FILE.out.mask.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa).join(BCFTOOLS_INDEX_CONS.out.gz_and_csi)) 
-  
-  // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
-  REMOVE_TRAILING_FASTA_NS ( BCFTOOLS_CONSENSUS.out.fa )
-  
+  // collect individual consensus sequences and combine into single files
+  collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_fasta.groupTuple()
+  collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.ivar_fasta.groupTuple()
+  CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
+  CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
+
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
-  FINAL_CONSENSUS_SEQUENCE ( REMOVE_TRAILING_FASTA_NS.out.fa )
+  FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_IVAR_FILES.out.file )
   
   // make bowtie2 index for final alignment
   BOWTIE2_BUILD_INDEX_FINAL ( BCFTOOLS_CONSENSUS.out.fa )
    
-  // re-align data against the new draft sequence (ie. final consensus sequence)
+  // re-align data against the new draft sequence (ie. final consensus sequence) using bowtie2. 
   BOWTIE2_ALIGN_TO_FINAL ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
   
   // call variants against final consensus sequence 
