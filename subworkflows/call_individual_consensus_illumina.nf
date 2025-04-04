@@ -5,8 +5,7 @@ include { IVAR_CONSENSUS     } from '../modules/nf_core/ivar/consensus/main.nf'
 workflow CALL_INDIVIDUAL_CONSENSUS_ILLUMINA {
 
  take:
-  reads_refseq       // tuple val (meta), path(reads), path(fasta)
-  index		         // tuple val (meta), path(index)
+  reads_refseq_index       // tuple val (meta), path(reads), path(fasta), path(index)
   min_qual
   min_depth
   min_freq
@@ -17,7 +16,7 @@ workflow CALL_INDIVIDUAL_CONSENSUS_ILLUMINA {
   ch_versions         = Channel.empty()                                               
 
   // map reads to refseq fasta
-  BOWTIE2_ALIGN (reads_refseq.join(index), "individual_refseq", "save_unaligned", "sort_bam")
+  BOWTIE2_ALIGN (reads_refseq_index, "individual_refseq", "save_unaligned", "sort_bam")
   ch_versions = ch_versions.mix ( BOWTIE2_ALIGN.out.versions )    
 
   // call consensus using viral_consensus

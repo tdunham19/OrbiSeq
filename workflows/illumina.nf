@@ -71,12 +71,16 @@ workflow ILLUMINA_CONSENSUS {
   // this uses the nextflow combine operator to create a new channel
   // that contains the reads for each dataset and all individual fasta files 
   individual_fasta_ch = ch_processed_reads.combine(ch_best10_individual_fasta, by: 0)
+  
+  // make a new channel with reads, refseq, and indexes for bowite2
+  // individual_fasta_index_ch = individual_fasta_ch.combine(BOWTIE2_BUILD_INDEX_BEST10.out.index, by: 0)
+  individual_fasta_index_ch = individual_fasta_ch.join(BOWTIE2_BUILD_INDEX_BEST10.out.index)
 	  
   // parameters related consensus calling: min depth, basecall quality, frequency for consensus calling
   min_depth_ch = Channel.value(params.illumina_min_depth)
   min_qual_ch  = Channel.value(params.illumina_min_qual)
   min_freq_ch  = Channel.value(params.illumina_min_freq)
-  CALL_INDIVIDUAL_CONSENSUS_ILLUMINA(individual_fasta_ch, BOWTIE2_BUILD_INDEX_BEST10.out.index, min_depth_ch, min_qual_ch, min_freq_ch)
+  CALL_INDIVIDUAL_CONSENSUS_ILLUMINA(individual_fasta_index_ch, min_depth_ch, min_qual_ch, min_freq_ch)
 
   // collect individual consensus sequences and combine into single files
   collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_fasta.groupTuple()
