@@ -52,10 +52,10 @@ workflow ILLUMINA_CONSENSUS {
   IDENTIFY_BEST_SEGMENTS_FROM_SAM ( BOWTIE2_ALIGN_TO_EXISTING.out.sam, ch_reference )
   
   // build bowtie2 index
-  BOWTIE2_BUILD_INDEX_BEST10 ( IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa )
+  // BOWTIE2_BUILD_INDEX_BEST10 ( IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa )
   
   // re-align data against best 10 BTV ref seqs using bowtie2.
-  BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_BEST10.out.index))
+  // BOWTIE2_ALIGN_TO_NEW_DRAFT ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_BEST10.out.index))
   
   // split up best10 segments into individual sequences because virus-focused 
   // consensus callers (namely iVar and viral_consensus) only work on one
@@ -64,6 +64,9 @@ workflow ILLUMINA_CONSENSUS {
   IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa
     .splitFasta(by: 1, file: true, elem: 1)
     .set { ch_best10_individual_fasta }
+    
+  // build individual bowtie2 indexs
+  BOWTIE2_BUILD_INDEX_BEST10 ( ch_best10_individual_fasta )
 
   // this uses the nextflow combine operator to create a new channel
   // that contains the reads for each dataset and all individual fasta files 
@@ -73,7 +76,7 @@ workflow ILLUMINA_CONSENSUS {
   min_depth_ch = Channel.value(params.illumina_min_depth)
   min_qual_ch  = Channel.value(params.illumina_min_qual)
   min_freq_ch  = Channel.value(params.illumina_min_freq)
-  CALL_INDIVIDUAL_CONSENSUS_ILLUMINA(individual_fasta_ch, ch_best10_individual_fasta, min_depth_ch, min_qual_ch, min_freq_ch)
+  CALL_INDIVIDUAL_CONSENSUS_ILLUMINA(individual_fasta_ch, BOWTIE2_BUILD_INDEX_BEST10.out.index, min_depth_ch, min_qual_ch, min_freq_ch)
 
   // collect individual consensus sequences and combine into single files
   collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_fasta.groupTuple()

@@ -6,8 +6,8 @@ include { IVAR_CONSENSUS     } from '../modules/nf_core/ivar/consensus/main.nf'
 workflow CALL_INDIVIDUAL_CONSENSUS_ILLUMINA {
 
  take:
-  reads_refseq       // tuple val (meta), path(reads), path(refseq)
-  refseq             // tuple val (meta), path(refseq)
+  reads_refseq       // tuple val (meta), path(reads), path(fasta)
+  index		         // tuple val (meta), path(index)
   min_qual
   min_depth
   min_freq
@@ -17,20 +17,17 @@ workflow CALL_INDIVIDUAL_CONSENSUS_ILLUMINA {
   // define some empty channels for keeping track of stuff
   ch_versions         = Channel.empty()                                               
 
-  // create index of reference 
-  BOWTIE2_BUILD ( refseq )
-  
-  // map reads to refseq
-  BOWTIE2_ALIGN (reads_refseq.join(BOWTIE2_BUILD.out.index), "individual_refseq")
-  ch_versions = ch_versions.mix ( BOWTIE2_ALIGN.out.versions )      
+  // map reads to refseq fasta
+  BOWTIE2_ALIGN (reads_refseq.join(index), "individual_refseq", "save_unaligned", "sort_bam")
+  ch_versions = ch_versions.mix ( BOWTIE2_ALIGN.out.versions )    
 
   // call consensus using viral_consensus
-  VIRAL_CONSENSUS(BOWTIE2_ALIGN.out.bam.join(refseq), min_qual, min_depth, min_freq)
-  ch_versions = ch_versions.mix ( VIRAL_CONSENSUS.out.versions )      
+  VIRAL_CONSENSUS(BOWTIE2_ALIGN.out.bam.join(BOWTIE2_ALIGN.out.fasta), min_qual, min_depth, min_freq)
+  ch_versions = ch_versions.mix ( VIRAL_CONSENSUS.out.versions )
 
   // call consensus using ivar
   def save_mpileup = true
-  IVAR_CONSENSUS(BOWTIE2_ALIGN.out.bam.join(BOWTIE2_ALIGN.out.refseq), min_qual, min_depth, min_freq, save_mpileup)
+  IVAR_CONSENSUS(BOWTIE2_ALIGN.out.bam.join(BOWTIE2_ALIGN.out.fasta), min_qual, min_depth, min_freq, save_mpileup)
   ch_versions = ch_versions.mix ( IVAR_CONSENSUS.out.versions )      
 
  emit: 
