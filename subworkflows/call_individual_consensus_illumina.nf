@@ -1,4 +1,3 @@
-include { BOWTIE2_BUILD      } from '../modules/nf_core/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN	 	 } from '../modules/nf_core/bowtie2/align/main.nf'
 include { VIRAL_CONSENSUS    } from '../modules/local/viral_consensus/main.nf'
 include { IVAR_CONSENSUS     } from '../modules/nf_core/ivar/consensus/main.nf'
