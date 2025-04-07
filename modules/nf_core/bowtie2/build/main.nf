@@ -11,6 +11,7 @@ process BOWTIE2_BUILD {
 
     output:
     tuple val(meta), path('bowtie2')    , emit: index
+    path  "versions.yml"                , emit: versions
 
     script:
     """

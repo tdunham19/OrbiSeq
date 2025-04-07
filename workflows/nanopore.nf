@@ -8,23 +8,10 @@ include { MINIMAP2_ALIGN_TO_EXISTING  	 				     } from '../modules/nf_core/mini
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 } from '../modules/local/identify_best_segments_from_sam/main.nf'
 include { MINIMAP2_ALIGN_TO_BEST10     						 } from '../modules/nf_core/minimap2/align/main.nf'
 
-include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              } from '../subworkflows/call_individual_consensus.nf'
+include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 } from '../subworkflows/call_individual_consensus_nanopore.nf'
 
-include { CONCATENATE_FILES as CONCATENATE_VC_FILES       } from '../modules/stenglein_lab/concatenate_files/main.nf'
-include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES     } from '../modules/stenglein_lab/concatenate_files/main.nf'
-
-include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/view/main.nf'
-include { SAMTOOLS_SORT  as SAMTOOLS_SORT_BEST10_ALIGNMENT   } from '../modules/nf_core/samtools/sort/main.nf'
-include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_BEST10_ALIGNMENT  } from '../modules/nf_core/samtools/index/main.nf'
-include { SAMTOOLS_FAIDX  							     	 } from '../modules/nf_core/samtools/faidx/main.nf'
-include { BCFTOOLS_MPILEUP	 					   			 } from '../modules/nf_core/bcftools/mpileup/main.nf'
-include { CREATE_MASK_FILE				       			 	 } from '../modules/local/create_mask_file/main.nf'
-include { BCFTOOLS_VIEW	 					   			 	 } from '../modules/nf_core/bcftools/view/main.nf'
-include { BCFTOOLS_INDEX as BCFTOOLS_INDEX_BCF	 			 } from '../modules/nf_core/bcftools/index/main.nf'
-include { BCFTOOLS_CALL 	 				   			 	 } from '../modules/nf_core/bcftools/call/main.nf'
-include { BCFTOOLS_INDEX as BCFTOOLS_INDEX_CONS	 			 } from '../modules/nf_core/bcftools/index/main.nf'
-include { BCFTOOLS_CONSENSUS					 			 } from '../modules/nf_core/bcftools/consensus/main.nf'
-include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
+include { CONCATENATE_FILES as CONCATENATE_VC_FILES          } from '../modules/stenglein_lab/concatenate_files/main.nf'
+include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES        } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
 include { MINIMAP2_ALIGN_TO_FINAL		  					 } from '../modules/nf_core/minimap2/align/main.nf'
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/view/main.nf'
@@ -75,23 +62,14 @@ workflow NANOPORE_CONSENSUS {
   // run PycoQC
   PYCOQC ( ch_summary )
     
-  // run minimap2 on input reads
+  // align input reads using minimap2
   MINIMAP2_ALIGN_TO_EXISTING ( ch_reads, ch_reference )
   
   // extract new fasta file containing best aligned-to seqs for this dataset
   IDENTIFY_BEST_SEGMENTS_FROM_SAM ( MINIMAP2_ALIGN_TO_EXISTING.out.sam, ch_reference )
   
-  // re-minimap data against best 10 BTV ref seqs.
+  // re-align data against best 10 BTV ref seqs using minimap2.
   MINIMAP2_ALIGN_TO_BEST10 ( ch_reads.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
-  
-  // run samtools to process minimap2 alignment again - view
-  SAMTOOLS_VIEW_BEST10_ALIGNMENT ( MINIMAP2_ALIGN_TO_BEST10.out.sam )
-
-  // run samtools to process minimap2 alignment again - sort
-  SAMTOOLS_SORT_BEST10_ALIGNMENT ( SAMTOOLS_VIEW_BEST10_ALIGNMENT.out.bam )
-  
-   // run samtools to process minimap2 alignment - index
-  SAMTOOLS_INDEX_BEST10_ALIGNMENT ( SAMTOOLS_SORT_BEST10_ALIGNMENT.out.bam )
   
   // split up best10 segments into individual sequences because virus-focused 
   // consensus callers (namely iVar and viral_consensus) only work on one
@@ -120,7 +98,7 @@ workflow NANOPORE_CONSENSUS {
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
   FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_IVAR_FILES.out.file )
   
-  // re-minimap data against the new draft sequence (ie. final consensus sequence)
+  // re-align data against the new draft sequence (ie. final consensus sequence) using minimap2.
   MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE.out.fa))
   
   // call variants against final consensus sequence 
