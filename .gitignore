@@ -12,3 +12,4 @@ summary/
 /reference/*.fasta
 !/reference/BTV/*.fasta
 !/reference/EHDV/*.fasta
+*.swp
