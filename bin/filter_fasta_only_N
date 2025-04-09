@@ -1,0 +1,52 @@
+#!/usr/bin/perl
+
+# This script filters out any fasta sequences composed
+# only of N characters 
+#
+# Mark Stenglein 4/2025 
+
+my $seq = "";
+
+# only output sequences with at least one non-N characters
+sub check_and_output_seq {
+   my $this_seq_id = shift @_;
+   my $this_seq    = shift @_;
+   if ($this_seq !~ /^N+$/) {
+	   # this sequence contains at least one non-N character: output
+      print ">$this_seq_id\n$this_seq\n";
+   } else {
+      # only Ns - don't output
+   }
+}
+
+my $seq_id = "";
+
+# read from stdin
+while (<>)
+{
+  chomp;
+
+  # header line
+  if (/^>(.*)/)
+  {
+	  # output previous sequence if defined
+	  if ($seq ne "")
+	  {
+	     check_and_output_seq($seq_id, $seq);
+	     $seq = "";
+	  }
+	  $seq_id = $1;
+  }
+  else
+  {
+	  # read one sequence line and append to sequence
+     my $seq_line = $_;
+	  $seq .= $seq_line;
+  }
+}
+
+# output final sequence
+if ($seq ne "")
+{
+  check_and_output_seq($seq_id, $seq);
+}
