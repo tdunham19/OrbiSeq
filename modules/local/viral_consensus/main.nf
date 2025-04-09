@@ -4,14 +4,14 @@ process VIRAL_CONSENSUS {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-	     'https://depot.galaxyproject.org/singularity/viral_consensus:0.0.6--h43eeafb_1' :
-        'biocontainers/viral_consensus:0.0.6--h43eeafb_1' }"
+       'https://depot.galaxyproject.org/singularity/viral_consensus:0.0.6--h43eeafb_1' :
+       'biocontainers/viral_consensus:0.0.6--h43eeafb_1' }"
 
     input:
     tuple val(meta), path(bam), path(ref_fasta)
-	 val(min_qual)
-	 val(min_depth)
-	 val(min_freq)
+    val(min_qual)
+    val(min_depth)
+    val(min_freq)
 
     output:
     tuple val(meta), path("*.consensus.fa")         , emit: fasta
@@ -24,16 +24,16 @@ process VIRAL_CONSENSUS {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-	 def ref_base = ref_fasta.baseName
+    def ref_base = ref_fasta.baseName
     """
     viral_consensus \
         -i $bam \
         -r $ref_fasta \
-		  -o ${prefix}.${ref_base}.consensus.fa \
-		  -op ${prefix}.${ref_base}.position_counts.txt \
-		  -q $min_qual \
-		  -d $min_depth \
-		  -f $min_freq \
+        -o ${prefix}.${ref_base}.consensus.fa \
+        -op ${prefix}.${ref_base}.position_counts.txt \
+        -q $min_qual \
+        -d $min_depth \
+        -f $min_freq \
         $args 
 
     cat <<-END_VERSIONS > versions.yml
@@ -44,11 +44,10 @@ process VIRAL_CONSENSUS {
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
-	 def ref_base = ref_fasta.baseName
+    def ref_base = ref_fasta.baseName
     """
-    echo "" | gzip > ${prefix}.seqtk-seq.${extension}.gz
-    echo ""	> ${prefix}.${ref_base}.consensus.fa 
-    echo ""	> ${prefix}.${ref_base}.position_counts.txtx 
+    echo "" > ${prefix}.${ref_base}.consensus.fa 
+    echo "" > ${prefix}.${ref_base}.position_counts.txtx 
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

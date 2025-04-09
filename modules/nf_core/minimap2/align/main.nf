@@ -97,6 +97,7 @@ tag "$meta.id"
   tuple val(meta), path("*.sam")                       , emit: sam
   tuple val(meta), path("*.bam")                       , emit: bam
   tuple val(meta), path(refseq)                        , emit: refseq
+  tuple val(meta), path("*.bam"), path(refseq)         , emit: bam_refseq
   path ("versions.yml")                                , emit: versions
 
   script:

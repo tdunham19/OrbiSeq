@@ -20,12 +20,12 @@ workflow CALL_INDIVIDUAL_CONSENSUS_NANOPORE {
   ch_versions = ch_versions.mix ( MINIMAP2_ALIGN.out.versions )      
 
   // call consensus using viral_consensus
-  VIRAL_CONSENSUS(MINIMAP2_ALIGN.out.bam.join(MINIMAP2_ALIGN.out.refseq), min_qual, min_depth, min_freq)
+  VIRAL_CONSENSUS(MINIMAP2_ALIGN.out.bam_refseq, min_qual, min_depth, min_freq)
   ch_versions = ch_versions.mix ( VIRAL_CONSENSUS.out.versions )      
 
   // call consensus using ivar
   def save_mpileup = true
-  IVAR_CONSENSUS(MINIMAP2_ALIGN.out.bam.join(MINIMAP2_ALIGN.out.refseq), min_qual, min_depth, min_freq, save_mpileup)
+  IVAR_CONSENSUS(MINIMAP2_ALIGN.out.bam_refseq, min_qual, min_depth, min_freq, save_mpileup)
   ch_versions = ch_versions.mix ( IVAR_CONSENSUS.out.versions )      
 
  emit: 
