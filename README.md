@@ -36,44 +36,41 @@ This pipeline can utlitize any reference genome from *Orbiviruses* with 10 segme
 - Premade Reference Sequences 
 	- There are premade reference files for Bluetongue virus (BTV) and Epizootic hemorrhagic disease virus (EHDV). More information on the creation of these references can be found in [cite publication]. 
 		- The reference files for BTV and EHDV can be found in ./reference/BTV and ./reference/EHDV respectively. 
-- Custom Reference Sequences	
+- User Included Reference Sequences	
 	- The user is also able to upload their own custom reference file. 
 	- When uploading custom reference sequences the user must ensure that the file is formatted correctly. It should be formatted as: segment#_sample_id (ex. s1_Genbank_Acession). Additionally there should be NO BLANK LINES throughout the document. 
 
 ## Output files
 
 - The pipeline outputs a consensus sequence, alignment, and variant calling files. The files are located in the following results directories:
-	- Consensus sequence: {sample_id}_new_draft_seqs.fa in ./results/final
+	- Consensus sequence: 
+		- ivar: {sample_id}_new_draft_seqs.fa in ./results/final OR {sample_id}.ivar_consensus.fasta in ./results/concatenate
+		- viral consensus: {sample_id}.viral_consensus.fasta in ./results/concatenate
 	- Final alignment: {sample_id}_new_draft_seq.sam file in ./results/bowtie2 OR ./results/minimap2
-	- Variant calling: {sample_id}.vcf file in ./results/bcftools/
 
 ## Workflow Steps
 
 ### Illumina workflow 
-- Preprocessing of input reads : Stenglein Lab read_preprocessing pipeline
+- Preprocessing and quality assessment of input reads : Stenglein Lab read_preprocessing pipeline
 	- Optional collapse duplicate reads 
 - Align input reads to large Orbi RefSeq : bowtie2 build & align 
-- Process files : samtools 
 - Choose best 10 segments from initial alignment
 - Align input reads to best10 RefSeq : bowtie2 build & align 
-- Process files : samtools & bcftools
-- Create consensus sequence : bcftools consensus
+- Call variants & create consensus sequences: iVar & ViralConsensus
 - Align input reads to final consensus sequence : bowtie2 build & align 
-- Call variants against final consensus sequence: bcftools mpileup
 
 ### Nanopore workflow 
+- Quality assessment of input reads : PycoQC
 - Align input reads to large Orbi RefSeq : minimap2 align 
-- Process files : samtools 
 - Choose best 10 segments from initial alignment
 - Align input reads to best10 RefSeq : minimap2 align 
-- Process files : samtools & bcftools
-- Create consensus sequence : bcftools consensus
+- Call variants & create consensus sequences: iVar & ViralConsensus
 - Align input reads to final consensus sequence : minimap2 align
-- Call variants against final consensus sequence: bcftools mpileup
 	
 These workflows take advantage of nf-core [modules](https://nf-co.re/modules) for many of these components and the overall [nf-core](https://nf-co.re/) design philosophy.
 
-Additionally, the illumina workflow takes advantage of the [Stenglein Lab Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing).
+The illumina workflow takes advantage of the [Stenglein Lab Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing).
+Both workflows take advantage of the iVar package [iVar](https://github.com/andersen-lab/ivar?tab=readme-ov-file) and ViralConsensus tool [ViralConsensus](https://github.com/niemasd/ViralConsensus). 
 
 
 ## Running the Pipeline
