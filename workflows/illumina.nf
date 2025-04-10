@@ -17,6 +17,7 @@ include { CALL_INDIVIDUAL_CONSENSUS_ILLUMINA              	 } from '../subworkfl
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES          } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES        } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
+include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_FINAL	     } from '../modules/nf_core/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN_TO_FINAL           				     } from '../modules/nf_core/bowtie2/align/main.nf'
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/view/main.nf'
@@ -78,8 +79,16 @@ workflow ILLUMINA_CONSENSUS {
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
   FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_IVAR_FILES.out.file )
   
+  // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
+  REMOVE_TRAILING_FASTA_NS ( FINAL_CONSENSUS_SEQUENCE.out.fa )
+  
+  // filter out empty fasta files
+  REMOVE_TRAILING_FASTA_NS_FILTERED = REMOVE_TRAILING_FASTA_NS.out.filter { meta, fasta ->
+    fasta.text.readLines().find { it && !it.startsWith(">") } != null 
+    }
+  
   // make bowtie2 index for final alignment
-  BOWTIE2_BUILD_INDEX_FINAL ( FINAL_CONSENSUS_SEQUENCE.out.fa )
+  BOWTIE2_BUILD_INDEX_FINAL ( REMOVE_TRAILING_FASTA_NS_FILTERED )
    
   // re-align data against the new draft sequence (ie. final consensus sequence) using bowtie2. 
   BOWTIE2_ALIGN_TO_FINAL ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
