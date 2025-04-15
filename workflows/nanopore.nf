@@ -12,6 +12,7 @@ include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 } from '../subworkfl
 
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES          } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES        } from '../modules/stenglein_lab/concatenate_files/main.nf'
+include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
 include { MINIMAP2_ALIGN_TO_FINAL		  					 } from '../modules/nf_core/minimap2/align/main.nf'
 include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/view/main.nf'
@@ -94,9 +95,12 @@ workflow NANOPORE_CONSENSUS {
   collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.ivar_fasta.groupTuple()
   CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
   CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
+  
+  // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
+  REMOVE_TRAILING_FASTA_NS ( CONCATENATE_IVAR_FILES.out.file )
 
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
-  FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_IVAR_FILES.out.file )
+  FINAL_CONSENSUS_SEQUENCE ( REMOVE_TRAILING_FASTA_NS.out.fa )
   
   // re-align data against the new draft sequence (ie. final consensus sequence) using minimap2.
   MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE.out.fa))
