@@ -6,10 +6,10 @@ workflow CALL_INDIVIDUAL_CONSENSUS_NANOPORE {
 
  take:
   reads_refseq       // tuple val (meta), path(reads), path(refseq)
-  min_qual
   min_depth
+  min_qual
   min_freq
-
+  
  main:
 
   // define some empty channels for keeping track of stuff

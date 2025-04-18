@@ -20,9 +20,6 @@ include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main
 include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_FINAL	     } from '../modules/nf_core/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN_TO_FINAL           				     } from '../modules/nf_core/bowtie2/align/main.nf'
-include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/view/main.nf'
-include { SAMTOOLS_SORT  as SAMTOOLS_SORT_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/sort/main.nf'
-include { BCFTOOLS_MPILEUP as BCFTOOLS_MPILEUP_FINAL	     } from '../modules/nf_core/bcftools/mpileup/main.nf'
 
 workflow ILLUMINA_CONSENSUS {
 
@@ -77,7 +74,8 @@ workflow ILLUMINA_CONSENSUS {
   CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
 
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
-  FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_IVAR_FILES.out.file )
+  // FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_IVAR_FILES.out.file )
+  FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_VC_FILES.out.file )
   
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
   REMOVE_TRAILING_FASTA_NS ( FINAL_CONSENSUS_SEQUENCE.out.fa )
@@ -92,11 +90,6 @@ workflow ILLUMINA_CONSENSUS {
    
   // re-align data against the new draft sequence (ie. final consensus sequence) using bowtie2. 
   BOWTIE2_ALIGN_TO_FINAL ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
-  
-  // call variants against final consensus sequence 
-  SAMTOOLS_VIEW_FINAL_ALIGNMENT ( BOWTIE2_ALIGN_TO_FINAL.out.sam )
-  SAMTOOLS_SORT_FINAL_ALIGNMENT ( SAMTOOLS_VIEW_FINAL_ALIGNMENT.out.bam )
-  BCFTOOLS_MPILEUP_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(FINAL_CONSENSUS_SEQUENCE.out.fa))
   
   }
   

@@ -6,8 +6,8 @@ workflow CALL_INDIVIDUAL_CONSENSUS_ILLUMINA {
 
  take:
   reads_refseq    // tuple val (meta), path(reads), path(fasta)
-  min_qual
   min_depth
+  min_qual
   min_freq
 
  main:
