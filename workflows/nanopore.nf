@@ -11,7 +11,6 @@ include { MINIMAP2_ALIGN_TO_BEST10     						 } from '../modules/nf_core/minimap
 include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 } from '../subworkflows/call_individual_consensus_nanopore.nf'
 
 include { RENAME 											 } from '../modules/local/rename/main.nf'
-
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES          } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES        } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
@@ -89,26 +88,21 @@ workflow NANOPORE_CONSENSUS {
   min_freq_ch  = Channel.value(params.nanopore_min_freq)
   CALL_INDIVIDUAL_CONSENSUS_NANOPORE(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
   
-  // pipe output through awk to rename files with unique id
+  // pipe output through awk to rename file headers with unique id
   RENAME ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta )
   
   // collect individual consensus sequences and combine into single files
   collected_vc_fasta_ch   = RENAME.out.fa.groupTuple()
   CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
-  // collect individual consensus sequences and combine into single files
-  // collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta.groupTuple()
-  // collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.ivar_fasta.groupTuple()
-  // CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
-  // CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
+  
+  collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.ivar_fasta.groupTuple()
+  CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
   
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
-  // FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_IVAR_FILES.out.file )
   FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_VC_FILES.out.file )
-  // FINAL_CONSENSUS_SEQUENCE ( RENAME.out.fa )
   
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
   REMOVE_TRAILING_FASTA_NS ( FINAL_CONSENSUS_SEQUENCE.out.fa )
-  // REMOVE_TRAILING_FASTA_NS ( RENAME.out.fa )
   
   // re-align data against the new draft sequence (ie. final consensus sequence) using minimap2.
   MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(REMOVE_TRAILING_FASTA_NS.out.fa))
