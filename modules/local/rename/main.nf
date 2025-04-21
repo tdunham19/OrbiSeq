@@ -10,17 +10,17 @@ process RENAME {
     tuple val(meta), path("*.fa"),     emit: fa
 
     shell:
-    '''
-    awk '/^>/ {
-        match($0, /best10_refseq\\.([0-9]+)/, arr);
+     '''
+     awk 'NR==1 {
+        match($0, /_refseq\\.([0-9]+)/, arr);
         if (arr[1] != "") {
-            print ">viral_consensus_" arr[1];
+            print ">viral_consensus_best10_refseq." arr[1];
         } else {
             print $0;
         }
-        next
+        next;
     } { 
-        print 
-    }' "!{input}" > "!{meta.id}"_new_draft_seqs.fa
+        print;
+    }' "!{input}" > temp.fa && mv temp.fa "!{input}"
     '''
 }
