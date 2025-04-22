@@ -75,8 +75,16 @@ workflow NANOPORE_CONSENSUS {
   // sequence at a time
   // see: https://www.nextflow.io/docs/latest/reference/operator.html#splitfasta
   IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa
-    .splitFasta(by: 1, file: true, elem: 1)
-    .set { ch_best10_individual_fasta }
+  .flatMap { meta, fa_file ->
+  	def split_files = fa_file.splitFasta(by: 1, file: true, elem: 1)
+    return split_files.collect { f -> [meta, f] }
+    }
+  .map { meta, file ->
+  	def segment_match = file.name =~ /s(\d+)_/
+    def segment = segment_match ? segment_match[0][1] as int : null
+    return [meta, segment, file]
+        }
+  .set { ch_best10_individual_fasta }
 
   // this uses the nextflow combine operator to create a new channel
   // that contains the reads for each dataset and all individual fasta files 
@@ -89,13 +97,12 @@ workflow NANOPORE_CONSENSUS {
   CALL_INDIVIDUAL_CONSENSUS_NANOPORE(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
   
   // pipe output through awk to rename file headers with unique id
-  RENAME ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta )
+  // RENAME ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta )
   
   // collect individual consensus sequences and combine into single files
-  collected_vc_fasta_ch   = RENAME.out.fa.groupTuple()
-  CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
-  
+  collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta.groupTuple()
   collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.ivar_fasta.groupTuple()
+  CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
   CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
   
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
