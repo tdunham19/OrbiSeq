@@ -5,11 +5,11 @@ include { IVAR_CONSENSUS     } from '../modules/nf_core/ivar/consensus/main.nf'
 workflow CALL_INDIVIDUAL_CONSENSUS_NANOPORE {
 
  take:
-  reads_refseq       // tuple val (meta), path(reads), path(refseq)
-  min_qual
+  reads_refseq       // tuple val (meta), path(reads), path(segment), path(refseq)
   min_depth
+  min_qual
   min_freq
-
+  
  main:
 
   // define some empty channels for keeping track of stuff

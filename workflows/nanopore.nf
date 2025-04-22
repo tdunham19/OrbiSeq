@@ -10,14 +10,12 @@ include { MINIMAP2_ALIGN_TO_BEST10     						 } from '../modules/nf_core/minimap
 
 include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 } from '../subworkflows/call_individual_consensus_nanopore.nf'
 
+include { RENAME 											 } from '../modules/local/rename/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES          } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES        } from '../modules/stenglein_lab/concatenate_files/main.nf'
-include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
+include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 include { MINIMAP2_ALIGN_TO_FINAL		  					 } from '../modules/nf_core/minimap2/align/main.nf'
-include { SAMTOOLS_VIEW	 as SAMTOOLS_VIEW_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/view/main.nf'
-include { SAMTOOLS_SORT  as SAMTOOLS_SORT_FINAL_ALIGNMENT    } from '../modules/nf_core/samtools/sort/main.nf'
-include { BCFTOOLS_MPILEUP as BCFTOOLS_MPILEUP_FINAL	     } from '../modules/nf_core/bcftools/mpileup/main.nf'
 
 workflow NANOPORE_CONSENSUS {
 
@@ -75,40 +73,43 @@ workflow NANOPORE_CONSENSUS {
   // split up best10 segments into individual sequences because virus-focused 
   // consensus callers (namely iVar and viral_consensus) only work on one
   // sequence at a time
-  // see: https://www.nextflow.io/docs/latest/reference/operator.html#splitfasta
+  // see: https://www.nextflow.io/docs/latest/reference/operator.html#splitfasta  
   IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa
-    .splitFasta(by: 1, file: true, elem: 1)
-    .set { ch_best10_individual_fasta }
-
+  .splitFasta(by: 1, file: true, elem: 1)
+  .map { fasta ->
+    def segment_match = fasta.name =~ /s(\d+)_/
+    def segment = segment_match ? segment_match[0][1] as int : null
+    return [segment, fasta]
+  }
+  .set { ch_best10_individual_fasta }
+  
   // this uses the nextflow combine operator to create a new channel
   // that contains the reads for each dataset and all individual fasta files 
   individual_fasta_ch = ch_reads.combine(ch_best10_individual_fasta, by: 0)
-	  
+  
   // parameters related consensus calling: min depth, basecall quality, frequency for consensus calling
   min_depth_ch = Channel.value(params.nanopore_min_depth)
   min_qual_ch  = Channel.value(params.nanopore_min_qual)
   min_freq_ch  = Channel.value(params.nanopore_min_freq)
   CALL_INDIVIDUAL_CONSENSUS_NANOPORE(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
-
+  
+  // pipe output through awk to rename file headers with unique id
+  // RENAME ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta )
+  
   // collect individual consensus sequences and combine into single files
   collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta.groupTuple()
   collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.ivar_fasta.groupTuple()
   CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
   CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
   
-  // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
-  REMOVE_TRAILING_FASTA_NS ( CONCATENATE_IVAR_FILES.out.file )
-
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
-  FINAL_CONSENSUS_SEQUENCE ( REMOVE_TRAILING_FASTA_NS.out.fa )
+  FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_VC_FILES.out.file )
+  
+  // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
+  REMOVE_TRAILING_FASTA_NS ( FINAL_CONSENSUS_SEQUENCE.out.fa )
   
   // re-align data against the new draft sequence (ie. final consensus sequence) using minimap2.
-  MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE.out.fa))
-  
-  // call variants against final consensus sequence 
-  SAMTOOLS_VIEW_FINAL_ALIGNMENT ( MINIMAP2_ALIGN_TO_FINAL.out.sam )
-  SAMTOOLS_SORT_FINAL_ALIGNMENT ( SAMTOOLS_VIEW_FINAL_ALIGNMENT.out.bam )
-  BCFTOOLS_MPILEUP_FINAL ( SAMTOOLS_SORT_FINAL_ALIGNMENT.out.bam.join(FINAL_CONSENSUS_SEQUENCE.out.fa))
+  MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(REMOVE_TRAILING_FASTA_NS.out.fa))
   
   }
   
