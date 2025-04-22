@@ -90,7 +90,7 @@ tag "$meta.id"
         'biocontainers/mulled-v2-66534bcbb7031a148b13e2ad42583020b9cd25c4:3161f532a5ea6f1dec9be5667c9efc2afdac6104-0' }"
 
   input:
-  tuple val(meta),  path(reads), path(refseq)
+  tuple val(meta),  path(reads), path(segment), path(refseq)
   val (suffix) // filename suffix
 
   output:
@@ -102,8 +102,8 @@ tag "$meta.id"
 
   script:
   """
-  minimap2 -ax map-ont $refseq $reads | samtools view -h -F 4 > ${meta.id}.${suffix}.sam 
-  samtools sort -O bam ${meta.id}.${suffix}.sam > ${meta.id}.${suffix}.bam
+  minimap2 -ax map-ont $refseq $reads | samtools view -h -F 4 > ${meta.id}.${segment}.${suffix}.sam 
+  samtools sort -O bam ${meta.id}.${segment}.${suffix}.sam  > ${meta.id}.${segment}.${suffix}.bam
 
   cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -73,23 +73,20 @@ workflow NANOPORE_CONSENSUS {
   // split up best10 segments into individual sequences because virus-focused 
   // consensus callers (namely iVar and viral_consensus) only work on one
   // sequence at a time
-  // see: https://www.nextflow.io/docs/latest/reference/operator.html#splitfasta
+  // see: https://www.nextflow.io/docs/latest/reference/operator.html#splitfasta  
   IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa
-  .flatMap { meta, fa_file ->
-  	def split_files = fa_file.splitFasta(by: 1, file: true, elem: 1)
-    return split_files.collect { f -> [meta, f] }
-    }
-  .map { meta, file ->
-  	def segment_match = file.name =~ /s(\d+)_/
+  .splitFasta(by: 1, file: true, elem: 1)
+  .map { fasta ->
+    def segment_match = fasta.name =~ /s(\d+)_/
     def segment = segment_match ? segment_match[0][1] as int : null
-    return [meta, segment, file]
-        }
+    return [segment, fasta]
+  }
   .set { ch_best10_individual_fasta }
-
+  
   // this uses the nextflow combine operator to create a new channel
   // that contains the reads for each dataset and all individual fasta files 
   individual_fasta_ch = ch_reads.combine(ch_best10_individual_fasta, by: 0)
-	  
+  
   // parameters related consensus calling: min depth, basecall quality, frequency for consensus calling
   min_depth_ch = Channel.value(params.nanopore_min_depth)
   min_qual_ch  = Channel.value(params.nanopore_min_qual)
