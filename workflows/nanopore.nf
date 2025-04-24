@@ -89,7 +89,8 @@ workflow NANOPORE_CONSENSUS {
   CALL_INDIVIDUAL_CONSENSUS_NANOPORE(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
   
   // rename file headers with unique id and segment number
-  RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.combined_output )
+  // RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.combined_output )
+  RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_refseq.join(CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta) )
 
   // collect individual consensus sequences and combine into single files  
   collected_vc_fasta_ch   = RENAME_ONE_FASTA.out.fasta.groupTuple()
