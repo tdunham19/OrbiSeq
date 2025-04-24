@@ -10,7 +10,7 @@ def rename_fasta(meta_id, refseq_fasta, new_fasta):
             raise ValueError("Refseq FASTA header must start with '>'")
         ref_seq_id = ref_line[1:].strip()
 
-    new_seq_id = f"{meta_id}_{ref_seq_id}_like"
+    new_seq_id = f"{meta_id}_{ref_seq_id}_"
 
     with open(new_fasta, 'r') as infile:
         lines = infile.readlines()
