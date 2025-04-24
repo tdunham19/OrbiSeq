@@ -5,7 +5,7 @@ process RENAME_ONE_FASTA {
     conda "${moduleDir}/environment.yml"
         
 	input: 
-    tuple val(meta), path(refseq_fasta), path(new_fasta)
+    tuple val(meta), path(new_fasta), path(refseq_fasta)
 
 	output: 
 	tuple val(meta), path("*.fasta") , emit: fasta
