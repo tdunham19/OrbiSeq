@@ -13,8 +13,8 @@ include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 } from '../subworkfl
 include { RENAME_ONE_FASTA 									 } from '../modules/local/rename_one_fasta/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES          } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES        } from '../modules/stenglein_lab/concatenate_files/main.nf'
-include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
 include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
+include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
 include { MINIMAP2_ALIGN_TO_FINAL		  					 } from '../modules/nf_core/minimap2/align/main.nf'
 
 workflow NANOPORE_CONSENSUS {
@@ -88,28 +88,26 @@ workflow NANOPORE_CONSENSUS {
   min_freq_ch  = Channel.value(params.nanopore_min_freq)
   CALL_INDIVIDUAL_CONSENSUS_NANOPORE(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
   
-  // pipe output through awk to rename file headers with unique id
-  RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta.join(ch_best10_individual_fasta) )
-  
-  // collect individual consensus sequences and combine into single files
-  // collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta.groupTuple()
-  // collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.ivar_fasta.groupTuple()
-  // CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
-  // CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
-  
+  // rename file headers with unique id and segment number
+  // RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta.join(ch_best10_individual_fasta) )
+  RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.ivar_fasta.join(ch_best10_individual_fasta) )
+
+  // collect individual consensus sequences and combine into single files  
   collected_vc_fasta_ch   = RENAME_ONE_FASTA.out.fasta.groupTuple()
-  collected_ivar_fasta_ch = RENAME_ONE_FASTA.out.fasta.groupTuple()
   CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
+  
+  collected_ivar_fasta_ch = RENAME_ONE_FASTA.out.fasta.groupTuple()
   CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
   
-  // pipe output through a sed to append new_X_draft_sequence to name of fasta record
-  FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_VC_FILES.out.file )
-  
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
-  REMOVE_TRAILING_FASTA_NS ( FINAL_CONSENSUS_SEQUENCE.out.fa )
+  // REMOVE_TRAILING_FASTA_NS ( CONCATENATE_VC_FILES.out.file )
+  REMOVE_TRAILING_FASTA_NS ( CONCATENATE_IVAR_FILES.out.file )
+  
+  // pipe output through a sed to append new_X_draft_sequence to name of fasta record
+  FINAL_CONSENSUS_SEQUENCE ( REMOVE_TRAILING_FASTA_NS.out.fa )
   
   // re-align data against the new draft sequence (ie. final consensus sequence) using minimap2.
-  MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(REMOVE_TRAILING_FASTA_NS.out.fa))
+  MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE.out.fa))
   
   }
   
