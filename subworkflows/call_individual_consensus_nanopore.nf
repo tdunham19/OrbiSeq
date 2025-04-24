@@ -21,7 +21,15 @@ workflow CALL_INDIVIDUAL_CONSENSUS_NANOPORE {
 
   // call consensus using viral_consensus
   VIRAL_CONSENSUS(MINIMAP2_ALIGN.out.bam_refseq, min_qual, min_depth, min_freq)
-  ch_versions = ch_versions.mix ( VIRAL_CONSENSUS.out.versions )      
+  ch_versions = ch_versions.mix ( VIRAL_CONSENSUS.out.versions )
+  
+  // create a new channel that combines meta, refseq, and consensus fasta
+  combined_channel = reads_refseq
+            .map { tuple(meta, reads, refseq) -> tuple(meta, refseq) }
+            .combine(VIRAL_CONSENSUS.out.fasta)
+            .map { tuple(meta, refseq), consensus_fasta -> 
+            	tuple(meta, refseq, consensus_fasta)
+            }
 
   // call consensus using ivar
   // def save_mpileup = true
@@ -32,6 +40,7 @@ workflow CALL_INDIVIDUAL_CONSENSUS_NANOPORE {
   versions                        = ch_versions
   viral_consensus_fasta           = VIRAL_CONSENSUS.out.fasta
   viral_consensus_position_counts = VIRAL_CONSENSUS.out.position_counts
+  combined_output 				  = combined_channel
   // ivar_fasta                      = IVAR_CONSENSUS.out.fasta
   // ivar_qual                       = IVAR_CONSENSUS.out.qual
   // ivar_mpileup                    = IVAR_CONSENSUS.out.mpileup

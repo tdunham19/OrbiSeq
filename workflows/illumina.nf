@@ -14,10 +14,11 @@ include { BOWTIE2_ALIGN_TO_NEW_DRAFT   	 				     } from '../modules/nf_core/bow
 
 include { CALL_INDIVIDUAL_CONSENSUS_ILLUMINA              	 } from '../subworkflows/call_individual_consensus_illumina.nf'
 
+include { RENAME_ONE_FASTA 									 } from '../modules/local/rename_one_fasta/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES          } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES        } from '../modules/stenglein_lab/concatenate_files/main.nf'
-include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
 include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
+include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_FINAL	     } from '../modules/nf_core/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN_TO_FINAL           				     } from '../modules/nf_core/bowtie2/align/main.nf'
 
@@ -66,27 +67,30 @@ workflow ILLUMINA_CONSENSUS {
   min_qual_ch  = Channel.value(params.illumina_min_qual)
   min_freq_ch  = Channel.value(params.illumina_min_freq)
   CALL_INDIVIDUAL_CONSENSUS_ILLUMINA(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
+  
+  // rename file headers with unique id and segment number
+  RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_fasta.join(ch_best10_individual_fasta) )
 
   // collect individual consensus sequences and combine into single files
   collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_fasta.groupTuple()
-  collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.ivar_fasta.groupTuple()
   CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
-  CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
 
-  // pipe output through a sed to append new_X_draft_sequence to name of fasta record
-  // FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_IVAR_FILES.out.file )
-  FINAL_CONSENSUS_SEQUENCE ( CONCATENATE_VC_FILES.out.file )
+  collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.ivar_fasta.groupTuple()
+  CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
   
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
-  REMOVE_TRAILING_FASTA_NS ( FINAL_CONSENSUS_SEQUENCE.out.fa )
+  REMOVE_TRAILING_FASTA_NS ( CONCATENATE_VC_FILES.out.file )
   
-  // filter out empty fasta files
-  REMOVE_TRAILING_FASTA_NS_FILTERED = REMOVE_TRAILING_FASTA_NS.out.filter { meta, fasta ->
+  // pipe output through a sed to append new_X_draft_sequence to name of fasta record
+  FINAL_CONSENSUS_SEQUENCE ( REMOVE_TRAILING_FASTA_NS.out.fa )
+  
+   // filter out empty fasta files
+  FINAL_CONSENSUS_SEQUENCE_FILTERED = FINAL_CONSENSUS_SEQUENCE.out.filter { meta, fasta ->
     fasta.text.readLines().find { it && !it.startsWith(">") } != null 
     }
   
   // make bowtie2 index for final alignment
-  BOWTIE2_BUILD_INDEX_FINAL ( REMOVE_TRAILING_FASTA_NS_FILTERED )
+  BOWTIE2_BUILD_INDEX_FINAL ( FINAL_CONSENSUS_SEQUENCE_FILTERED )
    
   // re-align data against the new draft sequence (ie. final consensus sequence) using bowtie2. 
   BOWTIE2_ALIGN_TO_FINAL ( ch_processed_reads.join(BOWTIE2_BUILD_INDEX_FINAL.out.index) )
