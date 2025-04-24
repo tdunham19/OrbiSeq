@@ -10,7 +10,7 @@ include { MINIMAP2_ALIGN_TO_BEST10     						 } from '../modules/nf_core/minimap
 
 include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 } from '../subworkflows/call_individual_consensus_nanopore.nf'
 
-include { RENAME 											 } from '../modules/local/rename/main.nf'
+include { RENAME_ONE_FASTA 									 } from '../modules/local/rename_one_fasta/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES          } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES        } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
@@ -75,13 +75,8 @@ workflow NANOPORE_CONSENSUS {
   // sequence at a time
   // see: https://www.nextflow.io/docs/latest/reference/operator.html#splitfasta  
   IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa
-  .splitFasta(by: 1, file: true, elem: 1)
-  .map { fasta ->
-    def segment_match = fasta.name =~ /s(\d+)_/
-    def segment = segment_match ? segment_match[0][1] as int : null
-    return [segment, fasta]
-  }
-  .set { ch_best10_individual_fasta }
+    .splitFasta(by: 1, file: true, elem: 1)
+    .set { ch_best10_individual_fasta }
   
   // this uses the nextflow combine operator to create a new channel
   // that contains the reads for each dataset and all individual fasta files 
@@ -94,11 +89,16 @@ workflow NANOPORE_CONSENSUS {
   CALL_INDIVIDUAL_CONSENSUS_NANOPORE(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
   
   // pipe output through awk to rename file headers with unique id
-  // RENAME ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta )
+  RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta )
   
   // collect individual consensus sequences and combine into single files
-  collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta.groupTuple()
-  collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.ivar_fasta.groupTuple()
+  // collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta.groupTuple()
+  // collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.ivar_fasta.groupTuple()
+  // CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
+  // CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
+  
+  collected_vc_fasta_ch   = RENAME_ONE_FASTA.out.fasta.groupTuple()
+  collected_ivar_fasta_ch = RENAME_ONE_FASTA.out.fasta.groupTuple()
   CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
   CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
   
