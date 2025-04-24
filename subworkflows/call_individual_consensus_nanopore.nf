@@ -1,6 +1,6 @@
 include { MINIMAP2_ALIGN     } from '../modules/nf_core/minimap2/align/main.nf'
 include { VIRAL_CONSENSUS    } from '../modules/local/viral_consensus/main.nf'
-include { IVAR_CONSENSUS     } from '../modules/nf_core/ivar/consensus/main.nf'
+// include { IVAR_CONSENSUS     } from '../modules/nf_core/ivar/consensus/main.nf'
 
 workflow CALL_INDIVIDUAL_CONSENSUS_NANOPORE {
 
@@ -33,7 +33,6 @@ workflow CALL_INDIVIDUAL_CONSENSUS_NANOPORE {
   viral_consensus_fasta           = VIRAL_CONSENSUS.out.fasta
   viral_consensus_position_counts = VIRAL_CONSENSUS.out.position_counts
   viral_consensus_refseq          = VIRAL_CONSENSUS.out.refseq
-  // combined_output 				  = combined_channel
   // ivar_fasta                      = IVAR_CONSENSUS.out.fasta
   // ivar_qual                       = IVAR_CONSENSUS.out.qual
   // ivar_mpileup                    = IVAR_CONSENSUS.out.mpileup

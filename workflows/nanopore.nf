@@ -89,7 +89,6 @@ workflow NANOPORE_CONSENSUS {
   CALL_INDIVIDUAL_CONSENSUS_NANOPORE(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
   
   // rename file headers with unique id and segment number
-  // RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.combined_output )
   RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_refseq.join(CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta) )
 
   // collect individual consensus sequences and combine into single files  
@@ -101,7 +100,7 @@ workflow NANOPORE_CONSENSUS {
   
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
   REMOVE_TRAILING_FASTA_NS ( CONCATENATE_VC_FILES.out.file )
-  
+
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
   FINAL_CONSENSUS_SEQUENCE ( REMOVE_TRAILING_FASTA_NS.out.fa )
   

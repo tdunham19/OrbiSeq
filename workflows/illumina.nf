@@ -69,17 +69,19 @@ workflow ILLUMINA_CONSENSUS {
   CALL_INDIVIDUAL_CONSENSUS_ILLUMINA(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
   
   // rename file headers with unique id and segment number
-  RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_fasta.join(ch_best10_individual_fasta) )
+  RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_refseq.join(CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_fasta) )
+  // RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_refseq.join(CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.ivar_fasta) )
 
   // collect individual consensus sequences and combine into single files
-  collected_vc_fasta_ch   = CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_fasta.groupTuple()
+  collected_vc_fasta_ch   = RENAME_ONE_FASTA.out.fasta.groupTuple()
   CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
 
-  collected_ivar_fasta_ch = CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.ivar_fasta.groupTuple()
-  CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
+  // collected_ivar_fasta_ch = RENAME_ONE_FASTA.out.fasta.groupTuple()
+  // CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
   
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
   REMOVE_TRAILING_FASTA_NS ( CONCATENATE_VC_FILES.out.file )
+  // REMOVE_TRAILING_FASTA_NS ( CONCATENATE_IVAR_FILES.out.file )
   
   // pipe output through a sed to append new_X_draft_sequence to name of fasta record
   FINAL_CONSENSUS_SEQUENCE ( REMOVE_TRAILING_FASTA_NS.out.fa )
