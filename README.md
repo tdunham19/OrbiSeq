@@ -60,6 +60,7 @@ This pipeline can utilize any reference genome from *Orbiviruses* with 10 segmen
 - Nanopore 
 	- Quality Assessment: 
 		- PycoQC - summary.html in ./results/pycoqc
+		- Nanoplot - NanoPlot-report.html in ./results/nanoplot
 	- Best10 Reference: 
 		- {sample.id}_best10_reference.fa in ./results/identify 
 	- Consensus sequence: 
