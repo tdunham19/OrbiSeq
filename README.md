@@ -90,9 +90,9 @@ This pipeline can utilize any reference genome from *Orbiviruses* with 10 segmen
 	
 These workflows take advantage of nf-core [modules](https://nf-co.re/modules) for many of these components and the overall [nf-core](https://nf-co.re/) design philosophy.
 
-The illumina workflow takes advantage of the [Stenglein Lab Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing) and the [iVar](https://github.com/andersen-lab/ivar?tab=readme-ov-file) package. 
+The Illumina workflow takes advantage of the [Stenglein Lab Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing) and the [iVar](https://github.com/andersen-lab/ivar?tab=readme-ov-file) package. 
 
-the nanopore workflow takes advantage of the [ViralConsensus](https://github.com/niemasd/ViralConsensus) and [Nanoplot](https://github.com/wdecoster/NanoPlot) tools. 
+The Nanopore workflow takes advantage of the [ViralConsensus](https://github.com/niemasd/ViralConsensus) and [Nanoplot](https://github.com/wdecoster/NanoPlot) tools. 
 
 
 ## Running the Pipeline
