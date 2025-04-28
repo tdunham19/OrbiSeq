@@ -40,7 +40,7 @@ process NANOPLOT {
     """
     touch LengthvsQualityScatterPlot_dot.html
     touch LengthvsQualityScatterPlot_kde.html
-    touch NanoPlot-report.html
+    touch {meta.id}_NanoPlot-report.html
     touch NanoPlot_20240301_1130.log
     touch NanoStats.txt
     touch Non_weightedHistogramReadlength.html

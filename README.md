@@ -92,7 +92,7 @@ These workflows take advantage of nf-core [modules](https://nf-co.re/modules) fo
 
 The illumina workflow takes advantage of the [Stenglein Lab Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing) and the [iVar](https://github.com/andersen-lab/ivar?tab=readme-ov-file) package. 
 
-the nanopore workflow takes advantage of the ViralConsensus tool [ViralConsensus](https://github.com/niemasd/ViralConsensus). 
+the nanopore workflow takes advantage of the [ViralConsensus](https://github.com/niemasd/ViralConsensus) and [Nanoplot](https://github.com/wdecoster/NanoPlot) tools. 
 
 
 ## Running the Pipeline
