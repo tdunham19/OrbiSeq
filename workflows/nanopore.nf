@@ -4,6 +4,7 @@ nextflow.enable.dsl=2
 
 // include modules: local, nf-core, and Stenglein lab
 include { PYCOQC										 	 } from '../modules/nf_core/pycoqc/main.nf'
+include { NANOPLOT										 	 } from '../modules/nf_core/nanoplot/main.nf'
 include { MINIMAP2_ALIGN_TO_EXISTING  	 				     } from '../modules/nf_core/minimap2/align/main.nf'
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 } from '../modules/local/identify_best_segments_from_sam/main.nf'
 include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_BEST10     						 } from '../modules/nf_core/minimap2/align/main.nf'
@@ -57,8 +58,11 @@ workflow NANOPORE_CONSENSUS {
         }
     .set { ch_summary }
     
-  // run PycoQC
+  // run PycoQC on sequencing summary file
   PYCOQC ( ch_summary )
+  
+  // run Nanoplot on input fastq files
+  NANOPLOT ( ch_reads )
     
   // align input reads using minimap2
   MINIMAP2_ALIGN_TO_EXISTING ( ch_reads, ch_reference, "existing_refseq" )
