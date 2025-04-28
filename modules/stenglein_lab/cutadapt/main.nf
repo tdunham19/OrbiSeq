@@ -51,6 +51,7 @@ https://github.com/nextflow-io/nextflow/commit/00bb8896a18d23bf82df66b267b4d03f0
 process CUTADAPT {
     tag "$meta.id"
     label 'process_medium'
+    label "no_publish"
 
     conda (params.enable_conda ? 'bioconda::cutadapt=3.4' : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

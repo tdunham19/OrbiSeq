@@ -1,6 +1,6 @@
 process RENAME_ONE_FASTA {
     tag "$meta.id"
-    // label "no_publish"
+    label "no_publish"
     
     conda "${moduleDir}/environment.yml"
         

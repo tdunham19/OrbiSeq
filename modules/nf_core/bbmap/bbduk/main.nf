@@ -1,6 +1,7 @@
 process BBMAP_BBDUK {
     tag "$meta.id"
     label 'process_medium'
+    label "no_publish"
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
