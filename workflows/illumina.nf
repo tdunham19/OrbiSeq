@@ -9,8 +9,6 @@ include { PREPROCESS_READS 									 } from '../subworkflows/stenglein_lab/prepr
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_EXISTING      } from '../modules/nf_core/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN_TO_EXISTING  		 				 } from '../modules/nf_core/bowtie2/align/main.nf'
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 } from '../modules/local/identify_best_segments_from_sam/main.nf'
-include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_BEST10        } from '../modules/nf_core/bowtie2/build/main.nf'
-include { BOWTIE2_ALIGN_TO_NEW_DRAFT   	 				     } from '../modules/nf_core/bowtie2/align/main.nf'
 
 include { CALL_INDIVIDUAL_CONSENSUS_ILLUMINA              	 } from '../subworkflows/call_individual_consensus_illumina.nf'
 
