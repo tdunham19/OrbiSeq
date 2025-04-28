@@ -6,7 +6,7 @@ nextflow.enable.dsl=2
 include { PYCOQC										 	 } from '../modules/nf_core/pycoqc/main.nf'
 include { MINIMAP2_ALIGN_TO_EXISTING  	 				     } from '../modules/nf_core/minimap2/align/main.nf'
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 } from '../modules/local/identify_best_segments_from_sam/main.nf'
-include { MINIMAP2_ALIGN_TO_BEST10     						 } from '../modules/nf_core/minimap2/align/main.nf'
+include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_BEST10     						 } from '../modules/nf_core/minimap2/align/main.nf'
 
 include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 } from '../subworkflows/call_individual_consensus_nanopore.nf'
 
@@ -14,7 +14,7 @@ include { RENAME_ONE_FASTA 									 } from '../modules/local/rename_one_fasta/m
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES          } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { REMOVE_TRAILING_FASTA_NS					 		 } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
-include { MINIMAP2_ALIGN_TO_FINAL		  					 } from '../modules/nf_core/minimap2/align/main.nf'
+include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_FINAL		  	 } from '../modules/nf_core/minimap2/align/main.nf'
 
 workflow NANOPORE_CONSENSUS {
 
@@ -61,13 +61,13 @@ workflow NANOPORE_CONSENSUS {
   PYCOQC ( ch_summary )
     
   // align input reads using minimap2
-  MINIMAP2_ALIGN_TO_EXISTING ( ch_reads, ch_reference )
+  MINIMAP2_ALIGN_TO_EXISTING ( ch_reads, ch_reference, "existing_refseq" )
   
   // extract new fasta file containing best aligned-to seqs for this dataset
   IDENTIFY_BEST_SEGMENTS_FROM_SAM ( MINIMAP2_ALIGN_TO_EXISTING.out.sam, ch_reference )
   
   // re-align data against best 10 BTV ref seqs using minimap2.
-  MINIMAP2_ALIGN_TO_BEST10 ( ch_reads.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa))
+  MINIMAP2_ALIGN_TO_BEST10 ( ch_reads.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa), "best10_refseq")
   
   // split up best10 segments into individual sequences because virus-focused 
   // consensus callers (namely iVar and viral_consensus) only work on one
@@ -101,7 +101,7 @@ workflow NANOPORE_CONSENSUS {
   FINAL_CONSENSUS_SEQUENCE ( REMOVE_TRAILING_FASTA_NS.out.fa )
   
   // re-align data against the new draft sequence (ie. final consensus sequence) using minimap2.
-  MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE.out.fa))
+  MINIMAP2_ALIGN_TO_FINAL ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE.out.fa), "new_draft_seqs_refseq")
   
   }
   
