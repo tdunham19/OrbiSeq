@@ -81,7 +81,7 @@ This pipeline can utilize any reference genome from *Orbiviruses* with 10 segmen
 - Align input reads to final consensus sequence : bowtie2 build & align 
 
 ### Nanopore workflow 
-- Quality assessment of input reads : PycoQC
+- Quality assessment of input reads and sequencing run : Nanoplot & PycoQC
 - Align input reads to large Orbi RefSeq : minimap2 align 
 - Choose best 10 segments from initial alignment
 - Align input reads to best10 RefSeq : minimap2 align 
