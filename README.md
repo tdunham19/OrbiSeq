@@ -32,32 +32,42 @@ This pipeline has the capability to run either Illumina or Nanopore sequencing d
 
 ### Reference:
 
-This pipeline can utilize any reference genome from *Orbiviruses* with 10 segments. To include a reference the user must specify where the file is located using the parameter --reference. 
+This pipeline can utilize any reference genome from *Orbiviruses* with 10 segments. The user must specify which reference file to use by using the parameter --reference. 
 - Premade Reference Sequences 
 	- There are premade reference files for Bluetongue virus (BTV) and Epizootic hemorrhagic disease virus (EHDV). More information on the creation of these references can be found in [cite publication]. 
-		- The reference files for BTV and EHDV can be found in ./reference/BTV and ./reference/EHDV respectively. 
+		- The reference files for BTV and EHDV can be found in ./reference/BTV/BTV_premade_refseq.fasta and ./reference/EHDV/EHDV_premade_refseq.fasta respectively. 
 - User Included Reference Sequences	
 	- The user is also able to upload their own custom reference file. 
 	- When uploading custom reference sequences the user must ensure that the file is formatted correctly. It should be formatted as: segment#_sample_id (ex. s1_Genbank_Acession). Additionally there should be NO BLANK LINES throughout the document. 
 
 ## Output files
 
-- The pipeline outputs a consensus sequence, alignment, and variant calling files. The files are located in the following results directories:
+- The pipeline outputs the best reference, alignments, and consensus sequence files. The files are located in the following results directories:
 	
-	- Illumina 
-		- Quality Assessment: 
-			- FastQC: {sample.id}_fastqc.html
-			- MultiQC: *_multiqc_report.html in ./results/multiqc 
-		- Consensus sequences: 
-			- ivar - {sample_id}.ivar_consensus.fasta in ./results/concatenate
-			- ViralConsensus - {sample_id}._new_draft_seq.fa in ./results/final
-		- Final alignment: minimap2 - {sample_id}_new_draft_seq.sam file in ./results/bowtie2
+- Illumina 
+	- Quality Assessment: 
+		- FastQC - {sample.id}_fastqc.html in ./results/fastqc
+		- MultiQC - *_multiqc_report.html in ./results/multiqc 
+	- Best10 Reference: 
+		- {sample.id}_best10_reference.fa in ./results/identify 
+	- Consensus sequences: 
+		- ivar - {sample_id}.ivar_consensus.fasta in ./results/concatenate
+		- ViralConsensus - {sample_id}._new_draft_seq.fa in ./results/final
+	- Alignments: 
+		- to best10 reference: bowtie2 - {sample_id}.new_draft_seq.sam or .bam in ./results/bowtie2
+		- to final consensus sequence: bowtie2 - {sample_id}.best10_refseq.sam or .bam in ./results/bowtie2
 			
-	- Nanopore 
-		- Quality Assessment: PycoQC - summary.html in ./results/pycoqc
-		- Consensus sequence: ViralConsensus - {sample_id}.new_draft_seqs.fa in ./results/final
-		- Final alignment: minimap2 - {sample_id}_new_draft_seq.sam file in ./results/minimap2
-
+- Nanopore 
+	- Quality Assessment: 
+		- PycoQC - summary.html in ./results/pycoqc
+	- Best10 Reference: 
+		- {sample.id}_best10_reference.fa in ./results/identify 
+	- Consensus sequence: 
+		- ViralConsensus - {sample_id}.new_draft_seqs.fa in ./results/final
+	- Alignments: 
+		- to best10 reference: minimap2 - {sample_id}.new_draft_seq.sam or .bam in ./results/minimap2
+		- to final consensus sequence: minimap2 - {sample_id}.best10_refseq.sam or .bam in ./results/minimap2
+		
 ## Workflow Steps
 
 ### Illumina workflow 
@@ -79,7 +89,7 @@ This pipeline can utilize any reference genome from *Orbiviruses* with 10 segmen
 	
 These workflows take advantage of nf-core [modules](https://nf-co.re/modules) for many of these components and the overall [nf-core](https://nf-co.re/) design philosophy.
 
-The illumina workflow takes advantage of the [Stenglein Lab Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing) and the iVar package[iVar](https://github.com/andersen-lab/ivar?tab=readme-ov-file). 
+The illumina workflow takes advantage of the [Stenglein Lab Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing) and the [iVar](https://github.com/andersen-lab/ivar?tab=readme-ov-file) package. 
 
 the nanopore workflow takes advantage of the ViralConsensus tool [ViralConsensus](https://github.com/niemasd/ViralConsensus). 
 
@@ -92,16 +102,18 @@ git clone https://github.com/tdunham19/OrbiSeq.git
 cd OrbiSeq
 ```
 
-2. Run the pipeline: must specify sequencing platform and where the reference file is located.  
+2. Test the pipeline to ensure that it is working correctly: [Testing](#Testing)
+
+3. Run the pipeline: must specify sequencing platform and where the reference file is located.  
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --fastq_dir /path/to/fastq/directory --reference /path/to/reference/directory  -resume
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --fastq_dir /path/to/fastq/directory --reference /path/to/{reference_file}.fasta  -resume
 ```
 
 
 ### Optional Deduplication (Illumina only)
 
 ```
-nextflow run main.nf --platform illumina --fastq_dir /path/to/fastq/directory --reference /path/to/reference/directory --collapse_duplicate_reads -resume
+nextflow run main.nf --platform illumina --fastq_dir /path/to/fastq/directory --reference /path/to/{reference_file}.fasta --collapse_duplicate_reads -resume
 ```
 
 
@@ -109,12 +121,14 @@ nextflow run main.nf --platform illumina --fastq_dir /path/to/fastq/directory --
 
 To test if the pipeline is working properly the pipeline is provided with small test fastq files. 
 
-   To test the illumina workflow: 
+The testing is successful if the pipeline completes all steps with no errors (note - PycoQC will not run for the Nanopore test).
+
+To test the illumina workflow: 
 ```
 nextflow run main.nf -profile test_illumina -resume
 ```
 
-   To test the nanopore workflow: 
+To test the nanopore workflow: 
 ```
 nextflow run main.nf -profile test_nanopore -resume
 ```
@@ -127,13 +141,13 @@ control(^) C
 ```
 - To resume the run add the -resume option
 ```
-Nextflow run main.nf --platform --fastq_dir --reference -resume
+nextflow run main.nf --platform --fastq_dir --reference -resume
 ```
 
 
 ## Dependencies
 To run the pipeline the user will need to be working on a computer that has nextflow and singularity installed.
 
-This pipeline requires nextflow version > 24.10.5
+This pipeline requires nextflow version > 24.10.5 [Installation - Nextflow Documentation](https://www.nextflow.io/docs/latest/install.html). It is recommended to install nextflow in a conda environment. 
 
 There is no specified version of Singularity for this pipeline. The pipeline has been tested with singularity-ce v3.9.9-bionic.
