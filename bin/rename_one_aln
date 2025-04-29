@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+
+import sys
+import pysam
+import re
+
+def extract_segment_number(header):
+    # Tries to find segment number like "Seg-3" or "segment 3"
+    match = re.search(r'[Ss]eg(?:ment)?[-_\s]?(\d+)', header)
+    if match:
+        return match.group(1)
+    else:
+        raise ValueError("Segment number not found in FASTA header.")
+
+def parse_ref_header(refseq_fasta):
+    with open(refseq_fasta, 'r') as ref_file:
+        first_line = ref_file.readline().strip()
+        if not first_line.startswith('>'):
+            raise ValueError("Reference FASTA header must start with '>'")
+        header = first_line[1:].strip()
+        segment_number = extract_segment_number(header)
+    return header, segment_number
+
+def rename_bam_reads(meta_id, refseq_fasta, input_bam, output_bam):
+    ref_id, segment = parse_ref_header(refseq_fasta)
+    prefix = f"{meta_id}_{ref_id}_Seg{segment}"
+
+    with pysam.AlignmentFile(input_bam, "rb") as infile, \
+         pysam.AlignmentFile(output_bam, "wb", template=infile) as outfile:
+        for read in infile:
+            read.query_name = f"{prefix}_{read.query_name}"
+            outfile.write(read)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 5:
+        print("Usage: rename_alignment_reads <meta_id> <refseq_fasta> <input.bam> <output.bam>", file=sys.stderr)
+        sys.exit(1)
+
+    rename_bam_reads(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

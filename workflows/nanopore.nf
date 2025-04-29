@@ -7,7 +7,7 @@ include { PYCOQC										 	 } from '../modules/nf_core/pycoqc/main.nf'
 include { NANOPLOT										 	 } from '../modules/nf_core/nanoplot/main.nf'
 include { MINIMAP2_ALIGN_TO_EXISTING  	 				     } from '../modules/nf_core/minimap2/align/main.nf'
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 } from '../modules/local/identify_best_segments_from_sam/main.nf'
-include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_BEST10     						 } from '../modules/nf_core/minimap2/align/main.nf'
+include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_BEST10     	 } from '../modules/nf_core/minimap2/align/main.nf'
 
 include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 } from '../subworkflows/call_individual_consensus_nanopore.nf'
 

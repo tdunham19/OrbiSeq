@@ -15,7 +15,12 @@ OrbiSeq is a Nextflow pipeline to analyze short and long sequences for *Orbiviru
 
 
 ## Pipeline Overview
-OrbiSeq is a nextflow pipeline that will perform alignment and create consensus sequences from Illumina or Nanopore sequence data for any *Orbivirus* with 10 segments or any segmented virus with 10 or fewer segments. 
+OrbiSeq is a nextflow pipeline that will perform alignment and creates a consensus sequence from Illumina or Nanopore sequence data for any *Orbivirus* with 10 segments or any segmented virus with 10 or fewer segments.
+
+OrbiSeq performs three rounds of alignment. The first aligns reads to a large set of representative reference sequences (this is especially important when working with unknown samples or serotypes).
+Following this, the reference sequence with the highest number of aligned reads for each segment is selected to generate a “best10 reference.” Reads are then mapped to these best10 reference sequences to construct a consensus sequence.
+A final alignment is performed against the consensus sequence itself, providing validation and allowing for manual inspection.
+
 
 ### Platform:
 This pipeline has the capability to run either Illumina or Nanopore sequencing data. When running this pipeline the user must specify which platform their data came from by using the --platform parameter. 
@@ -57,8 +62,8 @@ Within the chosen output directory, files will be organized into subfolders name
 		- ivar - {sample_id}.ivar_consensus.fasta in ./outdir/concatenate
 		- ViralConsensus - {sample_id}._new_draft_seq.fa in ./outdir/final
 	- Alignments: 
-		- to best10 reference: bowtie2 - {sample_id}.new_draft_seq.sam or .bam in ./outdir/bowtie2
-		- to final consensus sequence: bowtie2 - {sample_id}.best10_refseq.sam or .bam in ./outdir/bowtie2
+		- to best10 reference: bowtie2 - {sample_id}.best10_refseq.sam or .bam in ./outdir/bowtie2
+		- to final consensus sequence: bowtie2 - {sample_id}.new_draft_seq.sam or .bam in ./outdir/bowtie2
 			
 - Nanopore 
 	- Quality Assessment: 
@@ -69,8 +74,8 @@ Within the chosen output directory, files will be organized into subfolders name
 	- Consensus sequence: 
 		- ViralConsensus - {sample_id}.new_draft_seqs.fa in ./outdir/final
 	- Alignments: 
-		- to best10 reference: minimap2 - {sample_id}.new_draft_seq.sam or .bam in ./outdir/minimap2
-		- to final consensus sequence: minimap2 - {sample_id}.best10_refseq.sam or .bam in ./outdir/minimap2
+		- to best10 reference: minimap2 - {sample_id}.best10_refseq.sam or .bam in ./outdir/minimap2
+		- to final consensus sequence: minimap2 - {sample_id}.new_draft_seq.sam or .bam in ./outdir/minimap2
 		
 ## Workflow Steps
 
