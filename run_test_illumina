@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# run Orbiseq issue 1
+# MDS 4/2/25
+
+nextflow run main.nf \
+  -resume \
+  -profile singularity,test_illumina \
+  --platform illumina 
