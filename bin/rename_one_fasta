@@ -2,7 +2,7 @@
 
 import sys
 
-def rename_fasta(meta_id, refseq_fasta, new_fasta):
+def rename_fasta(meta_id, refseq_fasta, new_fasta, suffix):
     # Get reference sequence ID
     with open(refseq_fasta, 'r') as ref_file:
         ref_line = ref_file.readline().strip()
@@ -10,7 +10,7 @@ def rename_fasta(meta_id, refseq_fasta, new_fasta):
             raise ValueError("Refseq FASTA header must start with '>'")
         ref_seq_id = ref_line[1:].strip()
 
-    new_seq_id = f"{meta_id}_{ref_seq_id}_"
+    new_seq_id = f"{meta_id}_{ref_seq_id}_{suffix}"
 
     with open(new_fasta, 'r') as infile:
         lines = infile.readlines()
@@ -19,8 +19,8 @@ def rename_fasta(meta_id, refseq_fasta, new_fasta):
             print(line, end='')
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: rename_one_fasta <meta_id> <refseq_fasta> <new_fasta>", file=sys.stderr)
+    if len(sys.argv) != 5:
+        print("Usage: rename_one_fasta <meta_id> <refseq_fasta> <new_fasta> <suffix>", file=sys.stderr)
         sys.exit(1)
 
-    rename_fasta(sys.argv[1], sys.argv[2], sys.argv[3])
+    rename_fasta(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

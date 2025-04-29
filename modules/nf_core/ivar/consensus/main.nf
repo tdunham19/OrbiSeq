@@ -15,10 +15,11 @@ process IVAR_CONSENSUS {
     val save_mpileup
 
     output:
-    tuple val(meta), path("*.fa")      , emit: fasta
-    tuple val(meta), path("*.qual.txt"), emit: qual
-    tuple val(meta), path("*.mpileup") , optional:true, emit: mpileup
-    path "versions.yml"                , emit: versions
+    tuple val(meta), path(fasta), path("*.ivar.fa")  , emit: refseq_and_new
+    tuple val(meta), path("*.ivar.fa")               , emit: fasta
+    tuple val(meta), path("*.qual.txt")              , emit: qual
+    tuple val(meta), path("*.mpileup")               , optional:true, emit: mpileup
+    path "versions.yml"                              , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -27,7 +28,7 @@ process IVAR_CONSENSUS {
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
 	 def fasta_base = fasta.baseName
-    def prefix = task.ext.prefix ?: "${meta.id}.${fasta_base}"
+    def prefix = task.ext.prefix ?: "${fasta}.ivar"
     def mpileup = save_mpileup ? "| tee ${prefix}.mpileup" : ""
     """
     samtools \\
