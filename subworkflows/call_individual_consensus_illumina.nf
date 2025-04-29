@@ -37,6 +37,7 @@ workflow CALL_INDIVIDUAL_CONSENSUS_ILLUMINA {
   versions                        = ch_versions
   viral_consensus_fasta           = VIRAL_CONSENSUS.out.fasta
   viral_consensus_position_counts = VIRAL_CONSENSUS.out.position_counts
+  viral_consensus_refseq          = VIRAL_CONSENSUS.out.refseq
   ivar_fasta                      = IVAR_CONSENSUS.out.fasta
   ivar_qual                       = IVAR_CONSENSUS.out.qual
   ivar_mpileup                    = IVAR_CONSENSUS.out.mpileup

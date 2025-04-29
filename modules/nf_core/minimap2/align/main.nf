@@ -1,5 +1,3 @@
-// The only difference between each of these processes is the name of the output file
-
 process MINIMAP2_ALIGN_TO_EXISTING {
 	tag "$meta.id"
 
@@ -11,74 +9,26 @@ container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity
 input:
 tuple val(meta), path(reads)
 tuple val(meta2), path(reference)
+val (suffix) // filename suffix
 
 output:
-tuple val(meta), path("*.sam")                       , emit: sam
+  tuple val(meta), path("*.sam")                       , emit: sam
+  tuple val(meta), path("*.bam")                       , emit: bam
+  tuple val(meta), path(reference)                     , emit: reference
+  tuple val(meta), path("*.bam"), path(reference)      , emit: bam_reference
+  path ("versions.yml")                                , emit: versions
 
-script:
-"""
-minimap2 -ax map-ont $reference $reads | samtools view -h -F 4 > ${meta.id}.sam 
+  script:
+  """
+  minimap2 -ax map-ont $reference $reads | samtools view -h -F 4 > ${meta.id}.${suffix}.sam 
+  samtools sort -O bam ${meta.id}.${suffix}.sam  > ${meta.id}.${suffix}.bam
 
-cat <<-END_VERSIONS > versions.yml
+  cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         minimap2: \$(minimap2 --version 2>&1)
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
     END_VERSIONS
-"""
-}
-
-
-process MINIMAP2_ALIGN_TO_BEST10 {
-	tag "$meta.id"
-	// label "no_publish"
-
-conda "${moduleDir}/environment.yml"
-container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-66534bcbb7031a148b13e2ad42583020b9cd25c4:3161f532a5ea6f1dec9be5667c9efc2afdac6104-0' :
-        'biocontainers/mulled-v2-66534bcbb7031a148b13e2ad42583020b9cd25c4:3161f532a5ea6f1dec9be5667c9efc2afdac6104-0' }"
-
-input:
-tuple val(meta),  path(reads), path(input)
-
-output:
-tuple val(meta), path("*.sam")                       , emit: sam
-
-script:
-"""
-minimap2 -ax map-ont $input $reads | samtools view -h -F 4 > ${meta.id}_alignment_best10.sam 
-
-cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        minimap2: \$(minimap2 --version 2>&1)
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-    END_VERSIONS
-"""
-}
-
-process MINIMAP2_ALIGN_TO_FINAL {
-	tag "$meta.id"
-
-conda "${moduleDir}/environment.yml"
-container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-66534bcbb7031a148b13e2ad42583020b9cd25c4:3161f532a5ea6f1dec9be5667c9efc2afdac6104-0' :
-        'biocontainers/mulled-v2-66534bcbb7031a148b13e2ad42583020b9cd25c4:3161f532a5ea6f1dec9be5667c9efc2afdac6104-0' }"
-
-input:
-tuple val(meta),  path(reads), path(input)
-
-output:
-tuple val(meta), path("*.sam")                       , emit: sam
-
-script:
-"""
-minimap2 -ax map-ont $input $reads | samtools view -h -F 4 > ${meta.id}_alignment_new_draft_seq.sam 
-
-cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        minimap2: \$(minimap2 --version 2>&1)
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-    END_VERSIONS
-"""
+  """
 }
 
 process MINIMAP2_ALIGN {
@@ -90,7 +40,7 @@ tag "$meta.id"
         'biocontainers/mulled-v2-66534bcbb7031a148b13e2ad42583020b9cd25c4:3161f532a5ea6f1dec9be5667c9efc2afdac6104-0' }"
 
   input:
-  tuple val(meta),  path(reads), path(segment), path(refseq)
+  tuple val(meta),  path(reads), path(refseq)
   val (suffix) // filename suffix
 
   output:
@@ -102,8 +52,8 @@ tag "$meta.id"
 
   script:
   """
-  minimap2 -ax map-ont $refseq $reads | samtools view -h -F 4 > ${meta.id}.${segment}.${suffix}.sam 
-  samtools sort -O bam ${meta.id}.${segment}.${suffix}.sam  > ${meta.id}.${segment}.${suffix}.bam
+  minimap2 -ax map-ont $refseq $reads | samtools view -h -F 4 > ${meta.id}.${suffix}.sam 
+  samtools sort -O bam ${meta.id}.${suffix}.sam  > ${meta.id}.${suffix}.bam
 
   cat <<-END_VERSIONS > versions.yml
     "${task.process}":

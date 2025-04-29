@@ -1,6 +1,7 @@
 process VIRAL_CONSENSUS {
     tag "$meta.id"
     label 'process_single'
+    label "no_publish"
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -16,6 +17,7 @@ process VIRAL_CONSENSUS {
     output:
     tuple val(meta), path("*.consensus.fa")         , emit: fasta
     tuple val(meta), path("*.position_counts.txt")  , emit: position_counts
+    tuple val(meta), path(ref_fasta)                , emit: refseq
     path "versions.yml"               , emit: versions
 
     when:
