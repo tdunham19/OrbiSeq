@@ -53,6 +53,7 @@ process BOWTIE2_BUILD_ALIGN {
     bowtie2 \\
         -x \$INDEX \\
 		  --no-unal \\
+		  --local \\
         $reads_args \\
         --threads $task.cpus \\
         $unaligned \\
