@@ -66,7 +66,7 @@ Within the chosen output directory, files will be organized into subfolders name
 		- ViralConsensus - {sample_id}._new_draft_seq.fa in ./outdir/final
 	- Alignments: 
 		- to best10 reference: bowtie2 - {sample_id}.best10_refseq.sam or .bam in ./outdir/bowtie2
-		- to final consensus sequence: bowtie2 - {sample_id}.new_draft_seq.sam or .bam in ./outdir/bowtie2
+		- to final consensus sequence: bowtie2 - {sample_id}.new_draft_seq.bam in ./outdir/final_consensus_illumina
 			
 - Nanopore 
 	- Quality Assessment: 
@@ -78,7 +78,7 @@ Within the chosen output directory, files will be organized into subfolders name
 		- ViralConsensus - {sample_id}.new_draft_seqs.fa in ./outdir/final
 	- Alignments: 
 		- to best10 reference: minimap2 - {sample_id}.best10_refseq.sam or .bam in ./outdir/minimap2
-		- to final consensus sequence: minimap2 - {sample_id}.new_draft_seq.sam or .bam in ./outdir/minimap2
+		- to final consensus sequence: minimap2 - {sample_id}.new_draft_seq.bam in ./outdir/final_consensus_nanopore
 		
 ## Workflow Steps
 
