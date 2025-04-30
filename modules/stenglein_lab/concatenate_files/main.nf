@@ -4,6 +4,7 @@
 process CONCATENATE_FILES {
     tag "$file_to_save"
     label 'process_low'
+    label "no_publish"
 
     input:
 	 tuple val(meta), path(files)
