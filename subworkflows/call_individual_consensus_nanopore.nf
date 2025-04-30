@@ -24,6 +24,7 @@ workflow CALL_INDIVIDUAL_CONSENSUS_NANOPORE {
   
  emit: 
   versions                        = ch_versions
+  viral_consensus_refseq_and_new  = VIRAL_CONSENSUS.out.refseq_and_new
   viral_consensus_fasta           = VIRAL_CONSENSUS.out.fasta
   viral_consensus_position_counts = VIRAL_CONSENSUS.out.position_counts
   viral_consensus_refseq          = VIRAL_CONSENSUS.out.refseq

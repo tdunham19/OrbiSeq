@@ -16,6 +16,7 @@ process PYCOQC {
 
     when:
     task.ext.when == null || task.ext.when
+    params.pycoqc
 
     script:
     def args = task.ext.args ?: ''
