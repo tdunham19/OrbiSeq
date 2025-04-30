@@ -62,8 +62,7 @@ Within the chosen output directory, files will be organized into subfolders name
 	- Best10 Reference: 
 		- {sample.id}_best10_reference.fa in ./outdir/identify 
 	- Consensus sequences: 
-		- ivar - {sample_id}.ivar_consensus.fasta in ./outdir/concatenate
-		- ViralConsensus - {sample_id}._new_draft_seq.fa in ./outdir/final
+		- ViralConsensus - {sample_id}._new_draft_seq.fa in ./outdir/final_consensus_illumina
 	- Alignments: 
 		- to best10 reference: bowtie2 - {sample_id}.best10_refseq.sam or .bam in ./outdir/bowtie2
 		- to final consensus sequence: bowtie2 - {sample_id}.new_draft_seq.bam in ./outdir/final_consensus_illumina
@@ -75,7 +74,7 @@ Within the chosen output directory, files will be organized into subfolders name
 	- Best10 Reference: 
 		- {sample.id}_best10_reference.fa in ./outdir/identify 
 	- Consensus sequence: 
-		- ViralConsensus - {sample_id}.new_draft_seqs.fa in ./outdir/final
+		- ViralConsensus - {sample_id}.new_draft_seqs.fa in ./outdir/final_consensus_nanopore
 	- Alignments: 
 		- to best10 reference: minimap2 - {sample_id}.best10_refseq.sam or .bam in ./outdir/minimap2
 		- to final consensus sequence: minimap2 - {sample_id}.new_draft_seq.bam in ./outdir/final_consensus_nanopore
@@ -88,7 +87,7 @@ Within the chosen output directory, files will be organized into subfolders name
 - Align input reads to large Orbi RefSeq : bowtie2 build & align 
 - Choose best 10 segments from initial alignment
 - Align input reads to best10 RefSeq : bowtie2 build & align 
-- Call variants & create consensus sequences: iVar & ViralConsensus
+- Call variants & create consensus sequences: ViralConsensus
 - Align input reads to final consensus sequence : bowtie2 build & align 
 
 ### Nanopore workflow 
@@ -101,9 +100,11 @@ Within the chosen output directory, files will be organized into subfolders name
 	
 These workflows take advantage of nf-core [modules](https://nf-co.re/modules) for many of these components and the overall [nf-core](https://nf-co.re/) design philosophy.
 
-The Illumina workflow takes advantage of the [Stenglein Lab Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing) and the [iVar](https://github.com/andersen-lab/ivar?tab=readme-ov-file) package. 
+The Illumina workflow takes advantage of the [Stenglein Lab Read Preprocessing Pipeline](https://github.com/stenglein-lab/read_preprocessing).
 
-The Nanopore workflow takes advantage of the [ViralConsensus](https://github.com/niemasd/ViralConsensus) and [Nanoplot](https://github.com/wdecoster/NanoPlot) tools. 
+The Nanopore workflow takes advantage of the [Nanoplot](https://github.com/wdecoster/NanoPlot) tool.
+
+Both workflows take advantage of the [ViralConsensus](https://github.com/niemasd/ViralConsensus) tool. 
 
 
 ## Running the Pipeline
