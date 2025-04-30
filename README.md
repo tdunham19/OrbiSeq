@@ -32,10 +32,13 @@ This pipeline has the capability to run either Illumina or Nanopore sequencing d
 - Users will direct the pipeline where fastq files are located by using the --fastq_dir parameter. Illumina and Nanopore data should not be run through the pipeline at the same time. 
 	- Illumina: 
 		- Paired-end (R1 and R2) or single-end reads.
+		- The pipeline generates consensus sequences using the following thresholds: minimum quality score of 30, depth of 5, and frequency of 0.25. Users can modify these settings in the illumina.config file. 	
 	- Nanopore: 
 		- Users must concatenate raw read files into a single fastq.gz file (one file per barcode). This can be done using the cat command. 
 		- Users have the option to include a sequence summary file, which should be placed in the ./summary directory and begin with {sequencing_summary_}*.txt. 
-
+		- The pipeline generates consensus sequences using the following thresholds: minimum quality score of 10, depth of 5, and frequency of 0.25. Users can modify these settings in the nanopore.config file. 	 
+		
+		
 ### Reference:
 
 This pipeline can utilize any reference genome from *Orbiviruses* with 10 segments or any segmented genome with 10 or fewer segments. The user must specify which reference file to use by using the parameter --reference. 
