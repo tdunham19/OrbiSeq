@@ -29,9 +29,9 @@ workflow CALL_INDIVIDUAL_CONSENSUS_ILLUMINA {
   ch_versions = ch_versions.mix ( VIRAL_CONSENSUS.out.versions )
 
   // call consensus using ivar
-  def save_mpileup = true
-  IVAR_CONSENSUS(BOWTIE2_BUILD_ALIGN.out.bam_fasta, min_qual, min_depth, min_freq, save_mpileup)
-  ch_versions = ch_versions.mix ( IVAR_CONSENSUS.out.versions )      
+  // def save_mpileup = true
+  // IVAR_CONSENSUS(BOWTIE2_BUILD_ALIGN.out.bam_fasta, min_qual, min_depth, min_freq, save_mpileup)
+  // ch_versions = ch_versions.mix ( IVAR_CONSENSUS.out.versions )      
 
 
 
@@ -41,8 +41,8 @@ workflow CALL_INDIVIDUAL_CONSENSUS_ILLUMINA {
   viral_consensus_fasta           = VIRAL_CONSENSUS.out.fasta
   viral_consensus_position_counts = VIRAL_CONSENSUS.out.position_counts
   viral_consensus_refseq          = VIRAL_CONSENSUS.out.refseq
-  ivar_refseq_and_new             = IVAR_CONSENSUS.out.refseq_and_new  
-  ivar_fasta                      = IVAR_CONSENSUS.out.fasta
-  ivar_qual                       = IVAR_CONSENSUS.out.qual
-  ivar_mpileup                    = IVAR_CONSENSUS.out.mpileup
+  // ivar_refseq_and_new             = IVAR_CONSENSUS.out.refseq_and_new  
+  // ivar_fasta                      = IVAR_CONSENSUS.out.fasta
+  // ivar_qual                       = IVAR_CONSENSUS.out.qual
+  // ivar_mpileup                    = IVAR_CONSENSUS.out.mpileup
 }

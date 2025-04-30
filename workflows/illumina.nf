@@ -13,14 +13,14 @@ include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     						   } from '../modules/local/
 include { CALL_INDIVIDUAL_CONSENSUS_ILLUMINA              			   } from '../subworkflows/call_individual_consensus_illumina.nf'
 
 include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_VC 					   } from '../modules/local/rename_one_fasta/main.nf'
-include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_IVAR 				   } from '../modules/local/rename_one_fasta/main.nf'
+// include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_IVAR 				   } from '../modules/local/rename_one_fasta/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES         		   } from '../modules/stenglein_lab/concatenate_files/main.nf'
-include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES       		   } from '../modules/stenglein_lab/concatenate_files/main.nf'
+// include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES       		   } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_VC	   } from '../modules/local/remove_trailing_fasta_ns/main.nf'
-include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_IVAR	   } from '../modules/local/remove_trailing_fasta_ns/main.nf'
+// include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_IVAR } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 
 include { BOWTIE2_BUILD_ALIGN as BOWTIE2_BUILD_ALIGN_FINAL_VC   	   } from '../modules/nf_core/bowtie2/build_align/main.nf'
-include { BOWTIE2_BUILD_ALIGN as BOWTIE2_BUILD_ALIGN_FINAL_IVAR 	   } from '../modules/nf_core/bowtie2/build_align/main.nf'
+// include { BOWTIE2_BUILD_ALIGN as BOWTIE2_BUILD_ALIGN_FINAL_IVAR 	   } from '../modules/nf_core/bowtie2/build_align/main.nf'
 
 workflow ILLUMINA_CONSENSUS {
 
@@ -72,33 +72,33 @@ workflow ILLUMINA_CONSENSUS {
   
   // rename file headers with unique id and segment number
   RENAME_ONE_FASTA_VC ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_refseq_and_new, "_vc")
-  RENAME_ONE_FASTA_IVAR ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.ivar_refseq_and_new, "_ivar")
+  // RENAME_ONE_FASTA_IVAR ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.ivar_refseq_and_new, "_ivar")
 
   // collect individual consensus sequences and combine into single files
   collected_vc_fasta_ch   = RENAME_ONE_FASTA_VC.out.fasta.groupTuple()
   CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
 
-  collected_ivar_fasta_ch = RENAME_ONE_FASTA_IVAR.out.fasta.groupTuple()
-  CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
+  // collected_ivar_fasta_ch = RENAME_ONE_FASTA_IVAR.out.fasta.groupTuple()
+  // CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
   
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
   REMOVE_TRAILING_FASTA_NS_VC   ( CONCATENATE_VC_FILES.out.file )
-  REMOVE_TRAILING_FASTA_NS_IVAR ( CONCATENATE_IVAR_FILES.out.file )
+  // REMOVE_TRAILING_FASTA_NS_IVAR ( CONCATENATE_IVAR_FILES.out.file )
   
   // filter out empty fasta files
   FINAL_CONSENSUS_SEQUENCE_FILTERED_VC = REMOVE_TRAILING_FASTA_NS_VC.out.filter { meta, fasta ->
     fasta.text.readLines().find { it && !it.startsWith(">") } != null 
     }
 
-  FINAL_CONSENSUS_SEQUENCE_FILTERED_IVAR = REMOVE_TRAILING_FASTA_NS_IVAR.out.filter { meta, fasta ->
-    fasta.text.readLines().find { it && !it.startsWith(">") } != null 
-    }
+  // FINAL_CONSENSUS_SEQUENCE_FILTERED_IVAR = REMOVE_TRAILING_FASTA_NS_IVAR.out.filter { meta, fasta ->
+  //   fasta.text.readLines().find { it && !it.startsWith(">") } != null 
+  //   }
 
   def save_unaligned = false
   def sort_bam       = true
 
   BOWTIE2_BUILD_ALIGN_FINAL_VC (ch_processed_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_VC), "viral_consensus", save_unaligned, sort_bam)
-  BOWTIE2_BUILD_ALIGN_FINAL_IVAR (ch_processed_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_IVAR), "ivar_consensus", save_unaligned, sort_bam)
+  // BOWTIE2_BUILD_ALIGN_FINAL_IVAR (ch_processed_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_IVAR), "ivar_consensus", save_unaligned, sort_bam)
   
 }
   // specify the entry point for the workflow
