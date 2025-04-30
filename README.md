@@ -137,12 +137,18 @@ The testing is successful if the pipeline completes all steps with no errors (No
 
 To test the illumina workflow: 
 ```
-nextflow run main.nf -profile test_illumina -resume
+nextflow run main.nf \
+  -resume \
+  -profile singularity,test_illumina \
+  --platform illumina 
 ```
 
 To test the nanopore workflow: 
 ```
-nextflow run main.nf -profile test_nanopore -resume
+nextflow run main.nf \
+  -resume \
+  -profile singularity,test_nanopore \
+  --platform nanopore 
 ```
 
 

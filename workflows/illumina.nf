@@ -3,24 +3,24 @@
 nextflow.enable.dsl=2
 
 // include Stenglein lab read_preprocessing pipeline. 
-include { PREPROCESS_READS 									 } from '../subworkflows/stenglein_lab/preprocess_reads.nf'
+include { PREPROCESS_READS 										   	   } from '../subworkflows/stenglein_lab/preprocess_reads.nf'
 
 // include other modules: local, nf-core, and Stenglein lab
-include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_EXISTING      } from '../modules/nf_core/bowtie2/build/main.nf'
-include { BOWTIE2_ALIGN_TO_EXISTING  		 				 } from '../modules/nf_core/bowtie2/align/main.nf'
-include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 } from '../modules/local/identify_best_segments_from_sam/main.nf'
+include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_EXISTING   		       } from '../modules/nf_core/bowtie2/build/main.nf'
+include { BOWTIE2_ALIGN_TO_EXISTING  		 						   } from '../modules/nf_core/bowtie2/align/main.nf'
+include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     						   } from '../modules/local/identify_best_segments_from_sam/main.nf'
 
-include { CALL_INDIVIDUAL_CONSENSUS_ILLUMINA              	 } from '../subworkflows/call_individual_consensus_illumina.nf'
+include { CALL_INDIVIDUAL_CONSENSUS_ILLUMINA              			   } from '../subworkflows/call_individual_consensus_illumina.nf'
 
-include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_VC 			} from '../modules/local/rename_one_fasta/main.nf'
-include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_IVAR 		} from '../modules/local/rename_one_fasta/main.nf'
-include { CONCATENATE_FILES as CONCATENATE_VC_FILES      } from '../modules/stenglein_lab/concatenate_files/main.nf'
-include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES    } from '../modules/stenglein_lab/concatenate_files/main.nf'
+include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_VC 					   } from '../modules/local/rename_one_fasta/main.nf'
+include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_IVAR 				   } from '../modules/local/rename_one_fasta/main.nf'
+include { CONCATENATE_FILES as CONCATENATE_VC_FILES         		   } from '../modules/stenglein_lab/concatenate_files/main.nf'
+include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES       		   } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_VC	   } from '../modules/local/remove_trailing_fasta_ns/main.nf'
-include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_IVAR	} from '../modules/local/remove_trailing_fasta_ns/main.nf'
+include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_IVAR	   } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 
-include { BOWTIE2_BUILD_ALIGN as BOWTIE2_BUILD_ALIGN_FINAL_VC   } from '../modules/nf_core/bowtie2/build_align/main.nf'
-include { BOWTIE2_BUILD_ALIGN as BOWTIE2_BUILD_ALIGN_FINAL_IVAR } from '../modules/nf_core/bowtie2/build_align/main.nf'
+include { BOWTIE2_BUILD_ALIGN as BOWTIE2_BUILD_ALIGN_FINAL_VC   	   } from '../modules/nf_core/bowtie2/build_align/main.nf'
+include { BOWTIE2_BUILD_ALIGN as BOWTIE2_BUILD_ALIGN_FINAL_IVAR 	   } from '../modules/nf_core/bowtie2/build_align/main.nf'
 
 workflow ILLUMINA_CONSENSUS {
 
