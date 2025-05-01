@@ -1,5 +1,6 @@
 process BOWTIE2_BUILD {
     tag "$meta.id"
+    label "no_publish"    
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

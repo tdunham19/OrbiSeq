@@ -57,37 +57,28 @@ Within the chosen output directory, files will be organized into subfolders name
 	
 - Illumina 
 	- Quality Assessment: 
-		- FastQC - {sample.id}_fastqc.html in ./outdir/fastqc
-		- MultiQC - *_multiqc_report.html in ./outdir/multiqc 
-	- Best10 Reference: 
-		- {sample.id}_best10_reference.fa in ./outdir/identify 
-	- Consensus sequences: 
-		- ViralConsensus - {sample_id}._new_draft_seq.fa in ./outdir/final_consensus_illumina
-	- Alignments: 
-		- to best10 reference: bowtie2 - {sample_id}.best10_refseq.sam or .bam in ./outdir/bowtie2
-		- to final consensus sequence: bowtie2 - {sample_id}.new_draft_seq.bam in ./outdir/final_consensus_illumina
+		- FastQC - *_fastqc.html in ./outdir/quality_assessment_illumina
+		- MultiQC - *_multiqc_report.html in ./outdir/quality_assessment_illumina 
+	- Preprocessed Reads: 
+		- trimmed, deduplicated fastq files - in ./outdir/illumina_preprocessing/trimmed_deduplicated_fastq|trimmed_fastq
+	- Best10 Reference & best10 alignment: 
+		- {sample.id}_best10_refseq.fa in ./outdir/best10_illumina 
+		- {sample_id}_best10_alignment.bam in ./outdir/best10_illumina
+	- Consensus sequence & consensus alignment: 
+		- {sample_id}.viral_consensus.fasta in ./outdir/final_consensus_illumina
+		- {sample_id}.viral_consensus.bam in ./outdir/final_consensus_illumina
 			
 - Nanopore 
 	- Quality Assessment: 
 		- PycoQC - summary.html in ./outdir/quality_assessment_nanopore
 		- Nanoplot - NanoPlot-report.html in ./outdir/quality_assessment_nanopore
 	- Best10 Reference & best10 alignment: 
-		- {sample.id}_best10_reference.fa in ./outdir/best10_nanopore 
-		- {sample_id}.best10_refseq.bam in ./outdir/best10_nanopore
+		- {sample.id}_best10_refseq.fa in ./outdir/best10_nanopore 
+		- {sample_id}_best10_alignment.bam in ./outdir/best10_nanopore
 	- Consensus sequence & consensus alignment: 
-		- {sample_id}.new_draft_seqs.fa in ./outdir/final_consensus_nanopore
-		- {sample_id}.new_draft_seq.bam in ./outdir/final_consensus_nanopore
+		- {sample_id}_viral_consensus.fasta in ./outdir/final_consensus_nanopore
+		- {sample_id}_viral_consensus.bam in ./outdir/final_consensus_nanopore
 		
-		
-| Platform | Directory | Files |
-| ------- | -------- | ------- |
-| Illumina | quality_assessment_illumina | FastQC & MultiQC Reports |
-| Illumina | best10_illumina | best10 reference & .bam alignment |
-| Illumina | final_consensus_illumina | final consensus & .bam alignment |
-| Nanopore | quality_assessment_nanopore | PycoQC & Nanoplot Reports |
-| Nanopore | best10_nanopore | best10 reference & .bam alignment |
-| Nanopore | final_consensus_nanopore | final consensus & .bam alignment |
-
 		
 ## Workflow Steps
 

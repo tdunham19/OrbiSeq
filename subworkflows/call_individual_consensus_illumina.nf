@@ -41,6 +41,7 @@ workflow CALL_INDIVIDUAL_CONSENSUS_ILLUMINA {
   viral_consensus_fasta           = VIRAL_CONSENSUS.out.fasta
   viral_consensus_position_counts = VIRAL_CONSENSUS.out.position_counts
   viral_consensus_refseq          = VIRAL_CONSENSUS.out.refseq
+  bowtei2_build_align_bam_ref   = BOWTIE2_BUILD_ALIGN.out.bam_fasta
   // ivar_refseq_and_new             = IVAR_CONSENSUS.out.refseq_and_new  
   // ivar_fasta                      = IVAR_CONSENSUS.out.fasta
   // ivar_qual                       = IVAR_CONSENSUS.out.qual

@@ -2,6 +2,7 @@
 
 process BOWTIE2_ALIGN_TO_EXISTING {
     tag "$meta.id"
+    label "no_publish"    
     
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -35,6 +36,7 @@ process BOWTIE2_ALIGN_TO_EXISTING {
 
 process BOWTIE2_ALIGN_TO_FINAL {
     tag "$meta.id"
+    label "no_publish"
     
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

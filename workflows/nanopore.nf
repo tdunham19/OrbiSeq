@@ -103,7 +103,7 @@ workflow NANOPORE_CONSENSUS {
   
   // collect individual best10 alignments and combine into single files for users to inspect 
   collected_minimap2_bam   = RENAME_ONE_ALN.out.bam.groupTuple()
-  CONCATENATE_MINIMAP2_ALN  (collected_minimap2_bam,   ".best10_alignment.bam")
+  CONCATENATE_MINIMAP2_ALN  (collected_minimap2_bam,   "_best10_alignment.bam")
   
   
   
@@ -112,7 +112,7 @@ workflow NANOPORE_CONSENSUS {
 
   // collect individual consensus sequences and combine into single files  
   collected_vc_fasta_ch   = RENAME_ONE_FASTA_VC.out.fasta.groupTuple()
-  CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".final_viral_consensus.fasta")
+  CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   "_viral_consensus.fasta")
   
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
   REMOVE_TRAILING_FASTA_NS_VC ( CONCATENATE_VC_FILES.out.file )
@@ -123,7 +123,7 @@ workflow NANOPORE_CONSENSUS {
     }
 
   // re-align data against the new draft sequence (ie. final consensus sequence) using minimap2.
-  MINIMAP2_ALIGN_FINAL_VC ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_VC_NANOPORE), ".final_viral_consensus")
+  MINIMAP2_ALIGN_FINAL_VC ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_VC_NANOPORE), "viral_consensus")
 
   }
   

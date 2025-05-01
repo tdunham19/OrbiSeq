@@ -12,14 +12,18 @@ include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     						   } from '../modules/local/
 
 include { CALL_INDIVIDUAL_CONSENSUS_ILLUMINA              			   } from '../subworkflows/call_individual_consensus_illumina.nf'
 
-include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_VC 					   } from '../modules/local/rename_one_fasta/main.nf'
-// include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_IVAR 				   } from '../modules/local/rename_one_fasta/main.nf'
-include { CONCATENATE_FILES as CONCATENATE_VC_FILES         		   } from '../modules/stenglein_lab/concatenate_files/main.nf'
-// include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES       		   } from '../modules/stenglein_lab/concatenate_files/main.nf'
-include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_VC	   } from '../modules/local/remove_trailing_fasta_ns/main.nf'
-// include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_IVAR } from '../modules/local/remove_trailing_fasta_ns/main.nf'
+include { RENAME_ONE_ALN									 	  	   } from '../modules/local/rename_one_aln/main.nf'
+include { CONCATENATE_FILES as CONCATENATE_BOWTIE2_ALN		      	   } from '../modules/stenglein_lab/concatenate_files/main.nf'
 
+include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_VC 					   } from '../modules/local/rename_one_fasta/main.nf'
+include { CONCATENATE_FILES as CONCATENATE_VC_FILES         		   } from '../modules/stenglein_lab/concatenate_files/main.nf'
+include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_VC	   } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 include { BOWTIE2_BUILD_ALIGN as BOWTIE2_BUILD_ALIGN_FINAL_VC   	   } from '../modules/nf_core/bowtie2/build_align/main.nf'
+
+// iVar can be included if the user wants. 
+// include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_IVAR 				   } from '../modules/local/rename_one_fasta/main.nf'
+// include { CONCATENATE_FILES as CONCATENATE_IVAR_FILES       		   } from '../modules/stenglein_lab/concatenate_files/main.nf'
+// include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_IVAR } from '../modules/local/remove_trailing_fasta_ns/main.nf'
 // include { BOWTIE2_BUILD_ALIGN as BOWTIE2_BUILD_ALIGN_FINAL_IVAR 	   } from '../modules/nf_core/bowtie2/build_align/main.nf'
 
 workflow ILLUMINA_CONSENSUS {
@@ -69,6 +73,16 @@ workflow ILLUMINA_CONSENSUS {
   min_qual_ch  = Channel.value(params.illumina_min_qual)
   min_freq_ch  = Channel.value(params.illumina_min_freq)
   CALL_INDIVIDUAL_CONSENSUS_ILLUMINA(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
+  
+  
+  // rename best10 alignments with unique id and segment number
+  RENAME_ONE_ALN ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.bowtei2_build_align_bam_ref, "_best10_alignment") 
+  
+  // collect individual best10 alignments and combine into single files for users to inspect 
+  collected_bowtie2_bam   = RENAME_ONE_ALN.out.bam.groupTuple()
+  CONCATENATE_BOWTIE2_ALN  (collected_bowtie2_bam,   "_best10_alignment.bam")
+  
+  
   
   // rename file headers with unique id and segment number
   RENAME_ONE_FASTA_VC ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_refseq_and_new, "_vc")
