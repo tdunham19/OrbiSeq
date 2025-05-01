@@ -28,4 +28,7 @@ workflow CALL_INDIVIDUAL_CONSENSUS_NANOPORE {
   viral_consensus_fasta           = VIRAL_CONSENSUS.out.fasta
   viral_consensus_position_counts = VIRAL_CONSENSUS.out.position_counts
   viral_consensus_refseq          = VIRAL_CONSENSUS.out.refseq
+  minimap2_aln_bam				  = MINIMAP2_ALIGN.out.bam
+  minimap2_aln_ref				  = MINIMAP2_ALIGN.out.refseq
+  minimap2_aln_bam_ref			  = MINIMAP2_ALIGN.out.bam_refseq
 }

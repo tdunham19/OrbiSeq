@@ -1,39 +1,39 @@
-#!/usr/bin/env python3
+#!/usr/bin/env bash
 
-import sys
-import pysam
-import re
+set -euo pipefail
 
-def extract_segment_number(header):
-    # Tries to find segment number like "Seg-3" or "segment 3"
-    match = re.search(r'[Ss]eg(?:ment)?[-_\s]?(\d+)', header)
-    if match:
-        return match.group(1)
-    else:
-        raise ValueError("Segment number not found in FASTA header.")
+# Input arguments
+META_ID=$1       # Metadata ID
+BAM_FILE=$2      # BAM file to rename
+FASTA_FILE=$3    # Reference FASTA file
+SUFFIX=$4        # Filename suffix
 
-def parse_ref_header(refseq_fasta):
-    with open(refseq_fasta, 'r') as ref_file:
-        first_line = ref_file.readline().strip()
-        if not first_line.startswith('>'):
-            raise ValueError("Reference FASTA header must start with '>'")
-        header = first_line[1:].strip()
-        segment_number = extract_segment_number(header)
-    return header, segment_number
+# Ensure the BAM file exists
+if [[ ! -f "$BAM_FILE" ]]; then
+  echo "Error: BAM file $BAM_FILE not found." >&2
+  exit 1
+fi
 
-def rename_bam_reads(meta_id, refseq_fasta, input_bam, output_bam):
-    ref_id, segment = parse_ref_header(refseq_fasta)
-    prefix = f"{meta_id}_{ref_id}_Seg{segment}"
+# Ensure the FASTA file exists
+if [[ ! -f "$FASTA_FILE" ]]; then
+  echo "Error: FASTA file $FASTA_FILE not found." >&2
+  exit 1
+fi
 
-    with pysam.AlignmentFile(input_bam, "rb") as infile, \
-         pysam.AlignmentFile(output_bam, "wb", template=infile) as outfile:
-        for read in infile:
-            read.query_name = f"{prefix}_{read.query_name}"
-            outfile.write(read)
+# Extract the reference sequence ID from the FASTA file header
+REF_SEQ_ID=$(grep '^>' "$FASTA_FILE" | head -n 1 | sed 's/^>//' | awk '{print $1}')
 
-if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        print("Usage: rename_alignment_reads <meta_id> <refseq_fasta> <input.bam> <output.bam>", file=sys.stderr)
-        sys.exit(1)
+# Ensure that REF_SEQ_ID is not empty
+if [ -z "$REF_SEQ_ID" ]; then
+  echo "Error: Unable to extract reference sequence ID from $FASTA_FILE" >&2
+  exit 1
+fi
 
-    rename_bam_reads(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+# Construct the new sequence ID and output BAM file name
+NEW_SEQ_ID="${META_ID}_${REF_SEQ_ID}"
+OUTPUT_BAM="${NEW_SEQ_ID}_${SUFFIX}.bam"
+
+# Rename the BAM file by modifying its header
+samtools view -H "$BAM_FILE" | sed "s/SN:[^[:space:]]*/SN:${NEW_SEQ_ID}/g" | samtools reheader - "$BAM_FILE" > "$OUTPUT_BAM"
+
+echo "Renamed BAM file created: $OUTPUT_BAM"

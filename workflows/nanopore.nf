@@ -3,21 +3,24 @@
 nextflow.enable.dsl=2
 
 // include modules: local, nf-core, and Stenglein lab
-include { PYCOQC										 	 } from '../modules/nf_core/pycoqc/main.nf'
-include { NANOPLOT										 	 } from '../modules/nf_core/nanoplot/main.nf'
-include { MINIMAP2_ALIGN_TO_EXISTING  	 				     } from '../modules/nf_core/minimap2/align/main.nf'
-include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 } from '../modules/local/identify_best_segments_from_sam/main.nf'
+include { PYCOQC										 	 	  } from '../modules/nf_core/pycoqc/main.nf'
+include { NANOPLOT										 	 	  } from '../modules/nf_core/nanoplot/main.nf'
+include { MINIMAP2_ALIGN_TO_EXISTING  	 				     	  } from '../modules/nf_core/minimap2/align/main.nf'
+include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 	  } from '../modules/local/identify_best_segments_from_sam/main.nf'
 
 // need to remove this after finding a way to cat individual alignments
-include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_BEST10     	 } from '../modules/nf_core/minimap2/align/main.nf'
+include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_BEST10     	 	  } from '../modules/nf_core/minimap2/align/main.nf'
 
-include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 } from '../subworkflows/call_individual_consensus_nanopore.nf'
+include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 	  } from '../subworkflows/call_individual_consensus_nanopore.nf'
 
-include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_VC			 } from '../modules/local/rename_one_fasta/main.nf'
-include { CONCATENATE_FILES as CONCATENATE_VC_FILES          } from '../modules/stenglein_lab/concatenate_files/main.nf'
+include { RENAME_ONE_ALN									 	  } from '../modules/local/rename_one_aln/main.nf'
+include { CONCATENATE_FILES as CONCATENATE_MINIMAP2_ALN     	  } from '../modules/stenglein_lab/concatenate_files/main.nf'
+
+include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_VC			 	  } from '../modules/local/rename_one_fasta/main.nf'
+include { CONCATENATE_FILES as CONCATENATE_VC_FILES         	  } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_VC } from '../modules/local/remove_trailing_fasta_ns/main.nf'
-// include { SED as FINAL_CONSENSUS_SEQUENCE					 } from '../modules/local/sed/main.nf'
-include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_FINAL_VC		  	 } from '../modules/nf_core/minimap2/align/main.nf'
+include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_FINAL_VC		  		  } from '../modules/nf_core/minimap2/align/main.nf'
+
 
 workflow NANOPORE_CONSENSUS {
 
@@ -93,13 +96,23 @@ workflow NANOPORE_CONSENSUS {
   min_freq_ch  = Channel.value(params.nanopore_min_freq)
   CALL_INDIVIDUAL_CONSENSUS_NANOPORE(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
   
+  
+  
+  // rename best10 alignments with unique id and segment number
+  RENAME_ONE_ALN ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.minimap2_aln_bam_ref, "_best10_alignment")
+  
+  // collect individual best10 alignments and combine into single files for users to inspect 
+  collected_minimap2_bam   = RENAME_ONE_ALN.out.bam.groupTuple()
+  CONCATENATE_MINIMAP2_ALN  (collected_minimap2_bam,   ".best10_alignment.bam")
+  
+  
+  
   // rename file headers with unique id and segment number
-  // RENAME_ONE_FASTA ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_refseq.join(CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_fasta) )
   RENAME_ONE_FASTA_VC ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_refseq_and_new, "_vc")
 
   // collect individual consensus sequences and combine into single files  
   collected_vc_fasta_ch   = RENAME_ONE_FASTA_VC.out.fasta.groupTuple()
-  CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
+  CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".final_viral_consensus.fasta")
   
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
   REMOVE_TRAILING_FASTA_NS_VC ( CONCATENATE_VC_FILES.out.file )
@@ -109,12 +122,8 @@ workflow NANOPORE_CONSENSUS {
     fasta.text.readLines().find { it && !it.startsWith(">") } != null 
     }
 
-  // pipe output through a sed to append new_X_draft_sequence to name of fasta record
-  // FINAL_CONSENSUS_SEQUENCE ( REMOVE_TRAILING_FASTA_NS.out.fa )
-  
   // re-align data against the new draft sequence (ie. final consensus sequence) using minimap2.
-  MINIMAP2_ALIGN_FINAL_VC ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_VC_NANOPORE), "final_viral_consensus")
-  // BOWTIE2_BUILD_ALIGN_FINAL_VC (ch_processed_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_VC), "viral_consensus", save_unaligned, sort_bam)
+  MINIMAP2_ALIGN_FINAL_VC ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_VC_NANOPORE), ".final_viral_consensus")
 
   }
   
