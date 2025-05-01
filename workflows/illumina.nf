@@ -9,12 +9,9 @@ include { PREPROCESS_READS 										   	   } from '../subworkflows/stenglein_la
 include { BOWTIE2_BUILD as BOWTIE2_BUILD_INDEX_EXISTING   		       } from '../modules/nf_core/bowtie2/build/main.nf'
 include { BOWTIE2_ALIGN_TO_EXISTING  		 						   } from '../modules/nf_core/bowtie2/align/main.nf'
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     						   } from '../modules/local/identify_best_segments_from_sam/main.nf'
-
 include { CALL_INDIVIDUAL_CONSENSUS_ILLUMINA              			   } from '../subworkflows/call_individual_consensus_illumina.nf'
-
 include { RENAME_ONE_ALN									 	  	   } from '../modules/local/rename_one_aln/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_BOWTIE2_ALN		      	   } from '../modules/stenglein_lab/concatenate_files/main.nf'
-
 include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_VC 					   } from '../modules/local/rename_one_fasta/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES         		   } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_VC	   } from '../modules/local/remove_trailing_fasta_ns/main.nf'
@@ -74,7 +71,6 @@ workflow ILLUMINA_CONSENSUS {
   min_freq_ch  = Channel.value(params.illumina_min_freq)
   CALL_INDIVIDUAL_CONSENSUS_ILLUMINA(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
   
-  
   // rename best10 alignments with unique id and segment number
   RENAME_ONE_ALN ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.bowtei2_build_align_bam_ref, "_best10_alignment") 
   
@@ -82,37 +78,41 @@ workflow ILLUMINA_CONSENSUS {
   collected_bowtie2_bam   = RENAME_ONE_ALN.out.bam.groupTuple()
   CONCATENATE_BOWTIE2_ALN  (collected_bowtie2_bam,   "_best10_alignment.bam")
   
-  
-  
   // rename file headers with unique id and segment number
   RENAME_ONE_FASTA_VC ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.viral_consensus_refseq_and_new, "_vc")
-  // RENAME_ONE_FASTA_IVAR ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.ivar_refseq_and_new, "_ivar")
-
+  
   // collect individual consensus sequences and combine into single files
   collected_vc_fasta_ch   = RENAME_ONE_FASTA_VC.out.fasta.groupTuple()
-  CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   ".viral_consensus.fasta")
+  CONCATENATE_VC_FILES  (collected_vc_fasta_ch,   "_viral_consensus.fasta")
 
-  // collected_ivar_fasta_ch = RENAME_ONE_FASTA_IVAR.out.fasta.groupTuple()
-  // CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, ".ivar_consensus.fasta")
-  
   // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
   REMOVE_TRAILING_FASTA_NS_VC   ( CONCATENATE_VC_FILES.out.file )
-  // REMOVE_TRAILING_FASTA_NS_IVAR ( CONCATENATE_IVAR_FILES.out.file )
   
   // filter out empty fasta files
   FINAL_CONSENSUS_SEQUENCE_FILTERED_VC = REMOVE_TRAILING_FASTA_NS_VC.out.filter { meta, fasta ->
     fasta.text.readLines().find { it && !it.startsWith(">") } != null 
     }
 
-  // FINAL_CONSENSUS_SEQUENCE_FILTERED_IVAR = REMOVE_TRAILING_FASTA_NS_IVAR.out.filter { meta, fasta ->
-  //   fasta.text.readLines().find { it && !it.startsWith(">") } != null 
-  //   }
-
+  // perform final alignment against consensus sequence 
   def save_unaligned = false
   def sort_bam       = true
 
-  BOWTIE2_BUILD_ALIGN_FINAL_VC (ch_processed_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_VC), "viral_consensus", save_unaligned, sort_bam)
-  // BOWTIE2_BUILD_ALIGN_FINAL_IVAR (ch_processed_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_IVAR), "ivar_consensus", save_unaligned, sort_bam)
+  BOWTIE2_BUILD_ALIGN_FINAL_VC (ch_processed_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_VC), "_viral_consensus", save_unaligned, sort_bam)
+
+  // iVar can be included if the users wants.
+  // rename file headers with unique id and segment number
+  // RENAME_ONE_FASTA_IVAR ( CALL_INDIVIDUAL_CONSENSUS_ILLUMINA.out.ivar_refseq_and_new, "_ivar")
+  // collect individual consensus sequences and combine into single files
+  // collected_ivar_fasta_ch = RENAME_ONE_FASTA_IVAR.out.fasta.groupTuple()
+  // CONCATENATE_IVAR_FILES(collected_ivar_fasta_ch, "_ivar_consensus.fasta")
+  // pipe output through remove_trailing_fasta_Ns to strip N characters from beginning and ends of seqs
+  // REMOVE_TRAILING_FASTA_NS_IVAR ( CONCATENATE_IVAR_FILES.out.file )
+  // filter out empty fasta files
+  // FINAL_CONSENSUS_SEQUENCE_FILTERED_IVAR = REMOVE_TRAILING_FASTA_NS_IVAR.out.filter { meta, fasta ->
+  //   fasta.text.readLines().find { it && !it.startsWith(">") } != null 
+  //   }
+  // perform final alignment against consensus sequence 
+  // BOWTIE2_BUILD_ALIGN_FINAL_IVAR (ch_processed_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_IVAR), "_ivar_consensus", save_unaligned, sort_bam)
   
 }
   // specify the entry point for the workflow

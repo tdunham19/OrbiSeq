@@ -7,15 +7,9 @@ include { PYCOQC										 	 	  } from '../modules/nf_core/pycoqc/main.nf'
 include { NANOPLOT										 	 	  } from '../modules/nf_core/nanoplot/main.nf'
 include { MINIMAP2_ALIGN_TO_EXISTING  	 				     	  } from '../modules/nf_core/minimap2/align/main.nf'
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 	  } from '../modules/local/identify_best_segments_from_sam/main.nf'
-
-// need to remove this after finding a way to cat individual alignments
-include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_TO_BEST10     	 	  } from '../modules/nf_core/minimap2/align/main.nf'
-
 include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 	  } from '../subworkflows/call_individual_consensus_nanopore.nf'
-
 include { RENAME_ONE_ALN									 	  } from '../modules/local/rename_one_aln/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_MINIMAP2_ALN     	  } from '../modules/stenglein_lab/concatenate_files/main.nf'
-
 include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_VC			 	  } from '../modules/local/rename_one_fasta/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES         	  } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_VC } from '../modules/local/remove_trailing_fasta_ns/main.nf'
@@ -75,9 +69,6 @@ workflow NANOPORE_CONSENSUS {
   // extract new fasta file containing best aligned-to seqs for this dataset
   IDENTIFY_BEST_SEGMENTS_FROM_SAM ( MINIMAP2_ALIGN_TO_EXISTING.out.sam, ch_reference )
   
-  // re-align data against best 10 BTV ref seqs using minimap2.
-  MINIMAP2_ALIGN_TO_BEST10 ( ch_reads.join(IDENTIFY_BEST_SEGMENTS_FROM_SAM.out.fa), "best10_refseq")
-  
   // split up best10 segments into individual sequences because virus-focused 
   // consensus callers (namely iVar and viral_consensus) only work on one
   // sequence at a time
@@ -96,16 +87,12 @@ workflow NANOPORE_CONSENSUS {
   min_freq_ch  = Channel.value(params.nanopore_min_freq)
   CALL_INDIVIDUAL_CONSENSUS_NANOPORE(individual_fasta_ch, min_depth_ch, min_qual_ch, min_freq_ch)
   
-  
-  
   // rename best10 alignments with unique id and segment number
   RENAME_ONE_ALN ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.minimap2_aln_bam_ref, "_best10_alignment")
   
   // collect individual best10 alignments and combine into single files for users to inspect 
   collected_minimap2_bam   = RENAME_ONE_ALN.out.bam.groupTuple()
   CONCATENATE_MINIMAP2_ALN  (collected_minimap2_bam,   "_best10_alignment.bam")
-  
-  
   
   // rename file headers with unique id and segment number
   RENAME_ONE_FASTA_VC ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_refseq_and_new, "_vc")
