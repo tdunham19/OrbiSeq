@@ -63,7 +63,7 @@ Within the chosen output directory, files will be organized into subfolders name
 		- trimmed, deduplicated fastq files - in ./outdir/illumina_preprocessing/trimmed_deduplicated_fastq|trimmed_fastq
 	- Best10 Reference & best10 alignment: 
 		- {sample.id}_best10_refseq.fa in ./outdir/best10_illumina 
-		- {sample_id}_best10_alignment.bam in ./outdir/best10_illumina
+		- *_best10_alignment.bam in ./outdir/best10_illumina
 	- Consensus sequence & consensus alignment: 
 		- {sample_id}.viral_consensus.fasta in ./outdir/final_consensus_illumina
 		- {sample_id}.viral_consensus.bam in ./outdir/final_consensus_illumina
@@ -74,7 +74,7 @@ Within the chosen output directory, files will be organized into subfolders name
 		- Nanoplot - NanoPlot-report.html in ./outdir/quality_assessment_nanopore
 	- Best10 Reference & best10 alignment: 
 		- {sample.id}_best10_refseq.fa in ./outdir/best10_nanopore 
-		- {sample_id}_best10_alignment.bam in ./outdir/best10_nanopore
+		- *_best10_alignment.bam in ./outdir/best10_nanopore
 	- Consensus sequence & consensus alignment: 
 		- {sample_id}_viral_consensus.fasta in ./outdir/final_consensus_nanopore
 		- {sample_id}_viral_consensus.bam in ./outdir/final_consensus_nanopore

@@ -9,7 +9,6 @@ include { MINIMAP2_ALIGN_TO_EXISTING  	 				     	  } from '../modules/nf_core/m
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 	  } from '../modules/local/identify_best_segments_from_sam/main.nf'
 include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 	  } from '../subworkflows/call_individual_consensus_nanopore.nf'
 include { RENAME_ONE_ALN									 	  } from '../modules/local/rename_one_aln/main.nf'
-include { CONCATENATE_FILES as CONCATENATE_MINIMAP2_ALN     	  } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { RENAME_ONE_FASTA as RENAME_ONE_FASTA_VC			 	  } from '../modules/local/rename_one_fasta/main.nf'
 include { CONCATENATE_FILES as CONCATENATE_VC_FILES         	  } from '../modules/stenglein_lab/concatenate_files/main.nf'
 include { REMOVE_TRAILING_FASTA_NS as REMOVE_TRAILING_FASTA_NS_VC } from '../modules/local/remove_trailing_fasta_ns/main.nf'
@@ -89,10 +88,6 @@ workflow NANOPORE_CONSENSUS {
   
   // rename best10 alignments with unique id and segment number
   RENAME_ONE_ALN ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.minimap2_aln_bam_ref, "_best10_alignment")
-  
-  // collect individual best10 alignments and combine into single files for users to inspect 
-  collected_minimap2_bam   = RENAME_ONE_ALN.out.bam.groupTuple()
-  CONCATENATE_MINIMAP2_ALN  (collected_minimap2_bam,   "_best10_alignment.bam")
   
   // rename file headers with unique id and segment number
   RENAME_ONE_FASTA_VC ( CALL_INDIVIDUAL_CONSENSUS_NANOPORE.out.viral_consensus_refseq_and_new, "_vc")
