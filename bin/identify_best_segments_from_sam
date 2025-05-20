@@ -4,6 +4,7 @@
 # This script identifies the best aligned-to BTV reference sequences
 # 
 # Mark Stenglein July 27, 2012
+# Updated May 20, 2025 by Tillie Dunham
 #
 
 use strict;
@@ -37,91 +38,81 @@ open (my $fasta_fh, "<", $fasta_file) or print $usage and die("error: couldn't o
 my $sam_file = shift or print $usage and die($!);
 open (my $sam_fh, "<", $sam_file) or print $usage and die("error: couldn't open sam file $sam_file\n$!\n");
 
+# parse FASTA to get reference IDs for each segment
+my %segment_to_refs;  # segment number -> array of seq IDs
+my $cur_header;
+while (my $line = <$fasta_fh>) {
+    chomp $line;
+    if ($line =~ /^>(.+)/) {
+        $cur_header = $1;
+        if ($cur_header =~ /s(\d+)_/) {
+            push @{$segment_to_refs{$1}}, $cur_header;
+        }
+    }
+}
+seek($fasta_fh, 0, 0);  # rewind FASTA file for later
 
-my $flag = 0;
-my @fields = ();
-my @tags = ();
-my %subject_id_tally = ();
+my @segment_numbers = sort { $a <=> $b } keys %segment_to_refs;
+my %best_aligned_to_segment_ids;
 
-# iterate through sam file and keep track of how many times each segment (each index subject)
-# gets a read aligned to it
-while (<$sam_fh>)
-{
-   chomp;
-
-   if (/^@/)
-   {
-      # header lines - ignore them
-      next;
-   }
-   
-   # split line into tab-delimited components
-   @fields = split "\t";
-
-   # is this an unmapped query?
-   if (!$output_unmapped)
-   {
-      my $flag = $fields[1];
-      # don't output unmapped queries
-      # see SAM format spec.
-      if ($flag & 4) { next; }
-   }
-
-   # create tally of aligned-to subject IDs
-   my $subject_id = $fields[2];
-   $subject_id_tally{$subject_id} += 1;
+# decide if there is only one reference per segment
+my $single_reference_per_segment = 1;
+for my $segment (@segment_numbers) {
+    if (@{$segment_to_refs{$segment}} != 1) {
+        $single_reference_per_segment = 0;
+        last;
+    }
 }
 
-my @segment_numbers = (1..10);
-my %best_aligned_to_segment_ids = ();
+if ($single_reference_per_segment) {
+    # if only one ref per segment, use it directly
+    for my $segment (@segment_numbers) {
+        my $seq_id = $segment_to_refs{$segment}[0];
+        $best_aligned_to_segment_ids{$seq_id} = 1;
+        warn "$segment: $seq_id (only reference, chosen by default)\n";
+    }
+} else {
+    # tally alignments as in original script
+    my %subject_id_tally;
+    while (<$sam_fh>) {
+        chomp;
+        next if /^@/;
+        my @fields = split "\t";
+        if (!$output_unmapped) {
+            my $flag = $fields[1];
+            next if ($flag & 4);
+        }
+        my $subject_id = $fields[2];
+        $subject_id_tally{$subject_id} += 1;
+    }
 
-# for each segment #1 -> #10
-foreach my $segment (@segment_numbers)
-{
-   # iterate through a sorted list of aligned-to subject IDs and stop once we reach the most aligned-to for
-   # this particular segment
-   foreach my $subject_id (sort {$subject_id_tally{$b} <=> $subject_id_tally{$a}} keys %subject_id_tally)
-   {
-      # my $subject_id = $subject_id_tally{$subject_id};
-      # print "$subject_id\t$hit_count\n";
-      if ($subject_id =~ /s(\d+)_/)
-      {
-         my $this_segment_number = $1;
-         if ($this_segment_number == $segment)
-         {
-            warn "$segment: $subject_id\n"; # output to stderr
-            $best_aligned_to_segment_ids{$subject_id} = 1; # keep track of best segment IDs
-            last; # break out of for loop
-         }
-      }
-      else
-      {
-         die ("error: couldn't parse segment # for subject ID: $subject_id\n");
-      }
-   }
+    # choose the reference with most alignments for each segment
+    for my $segment (@segment_numbers) {
+        foreach my $subject_id (sort { $subject_id_tally{$b} <=> $subject_id_tally{$a} } keys %subject_id_tally) {
+            if ($subject_id =~ /s(\d+)_/) {
+                my $this_segment_number = $1;
+                if ($this_segment_number == $segment) {
+                    warn "$segment: $subject_id (most aligned-to)\n";
+                    $best_aligned_to_segment_ids{$subject_id} = 1;
+                    last;
+                }
+            } else {
+                die ("error: couldn't parse segment # for subject ID: $subject_id\n");
+            }
+        }
+    }
 }
 
-# now parse through fasta file and output seqs if they are one of the best 10
+# output the selected references
 my $printing_lines = 0;
-while (<$fasta_fh>)
-{
-   chomp;
-   # fasta header line
-   if (/^>(.+)/)
-   {
-      $printing_lines = 0;
-      my $seq_id = $1; 
-      # is this one of the best segments?  If so, we'll print it out
-      if ($best_aligned_to_segment_ids{$seq_id})
-      {
-         $printing_lines = 1;
-      }
-   }
-   if ($printing_lines)
-   {
-      print "$_\n";
-   }
+while (<$fasta_fh>) {
+    chomp;
+    if (/^>(.+)/) {
+        $printing_lines = 0;
+        my $seq_id = $1;
+        if ($best_aligned_to_segment_ids{$seq_id}) {
+            $printing_lines = 1;
+        }
+    }
+    print "$_\n" if $printing_lines;
 }
-
-
-
