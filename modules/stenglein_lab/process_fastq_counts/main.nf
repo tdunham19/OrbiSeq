@@ -2,7 +2,8 @@ process PROCESS_FASTQ_COUNTS {
     tag "$fastq_counts_tsv"
     label 'process_low'
 
-    conda (params.enable_conda ? 'conda-forge::r-tidyverse=1.3.1' : null) 
+    conda "${moduleDir}/environment.yml"
+    // conda (params.enable_conda ? 'conda-forge::r-tidyverse=1.3.1' : null) 
     // why aren't singularity biocontainers updated to a newer tidyverse version?
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/r-tidyverse:1.2.1' : 

@@ -1,0 +1,7 @@
+name: process_fastq_counts
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::r-tidyverse=1.2.1

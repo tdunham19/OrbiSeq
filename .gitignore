@@ -1,5 +1,6 @@
 work/
 results/
+run_image_bash/
 /fastq/
 /other_fastq/
 summary/

@@ -1,0 +1,7 @@
+name: viral_consensus
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::viral_consensus=0.0.6=h43eeafb_1

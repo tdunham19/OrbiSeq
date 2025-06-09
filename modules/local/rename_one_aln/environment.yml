@@ -1,0 +1,7 @@
+name: rename_one_aln
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::samtools=1.21=h50ea8bc_0
