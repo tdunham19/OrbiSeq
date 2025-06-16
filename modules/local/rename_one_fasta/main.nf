@@ -2,7 +2,7 @@ process RENAME_ONE_FASTA {
     tag "$meta.id"
     label "no_publish"
     
-    conda "${moduleDir}/environment.yml"
+    // conda "${moduleDir}/environment.yml"
         
 	input: 
     tuple val(meta), path(refseq_fasta), path(new_fasta) 
