@@ -3,7 +3,10 @@ OrbiSeq is a Nextflow pipeline to analyze short and long sequences for *Orbiviru
 
 ## Contents
 - [Pipeline Overview](#Pipeline-Overview)
+	- [Platform](#Platform)
 - [Input Files](#Input-Files)
+	- [Data](#Data:)
+	- [Reference](#Reference:)
 - [Output Files](#Output-Files)
 - [Workflow Steps](#Workflow-Steps)
 - [Running the Pipeline](#Running-the-Pipeline)
@@ -120,14 +123,14 @@ cd OrbiSeq
 
 3. Run the pipeline: The user MUST specify sequencing platform, which reference file to use, and where the input fastq files are located. The user has the option to specify the output directory. 
 ```
-nextflow run main.nf --platform ['illumina' or 'nanopore'] --fastq_dir /path/to/fastq/directory --reference /path/to/{reference_file}.fasta --outdir /optional/path/to/output/directory -resume
+nextflow run main.nf --platform ['illumina' or 'nanopore'] --fastq_dir /path/to/fastq/directory --reference /path/to/{reference_file}.fasta --outdir /optional/path/to/output/directory --profile ['singularity' or 'conda'] -resume
 ```
 
 
 ### Optional Deduplication (Illumina only)
 
 ```
-nextflow run main.nf --platform illumina --fastq_dir /path/to/fastq/directory --reference /path/to/{reference_file}.fasta --outdir /optional/path/to/output/directory --collapse_duplicate_reads -resume
+nextflow run main.nf --platform illumina --fastq_dir /path/to/fastq/directory --reference /path/to/{reference_file}.fasta --outdir /optional/path/to/output/directory --profile ['singularity' or 'conda'] --collapse_duplicate_reads -resume
 ```
 
 
@@ -140,17 +143,17 @@ The testing is successful if the pipeline completes all steps with no errors (No
 To test the illumina workflow: 
 ```
 nextflow run main.nf \
-  -resume \
-  -profile singularity,test_illumina \
-  --platform illumina 
+  --platform illumina \
+  -profile ['singularity' or 'conda'],test_illumina \
+  -resume
 ```
 
 To test the nanopore workflow: 
 ```
 nextflow run main.nf \
-  -resume \
-  -profile singularity,test_nanopore \
-  --platform nanopore 
+  --platform nanopore \
+  -profile ['singularity' or 'conda'],test_nanopore \
+  -resume
 ```
 
 
@@ -161,16 +164,18 @@ control(^) C
 ```
 - To resume the run add the -resume option
 ```
-nextflow run main.nf --platform --fastq_dir --reference -resume
+nextflow run main.nf --platform --fastq_dir --reference --profile -resume
 ```
 
 
 ## Dependencies
 To run the pipeline the user will need to be working on a computer that has nextflow and singularity installed.
 
-This pipeline requires nextflow version > 24.10.5 [Installation - Nextflow Documentation](https://www.nextflow.io/docs/latest/install.html). It is recommended to install nextflow in a conda environment. 
+This pipeline requires nextflow version >= 23.10.1 [Installation - Nextflow Documentation](https://www.nextflow.io/docs/latest/install.html). It is recommended to install nextflow in a conda environment. 
 
 There is no specified version of Singularity for this pipeline. The pipeline has been tested with singularity-ce v3.9.9-bionic.
+
+The user has the option to also use a conda profile, this pipeline requires conda version >= 25.3.1. 
 
 
 ## Citation
