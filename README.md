@@ -1,4 +1,4 @@
-# ![tdunham19/OrbiSeq](docs/images/OrbiSeq_Subway_062525_light.png)
+# ![tdunham19/OrbiSeq](docs/images/OrbiSeq_Subway_062525_light.png#gh-light-mode-only) ![tdunham19/OrbiSeq](docs/images/OrbiSeq_Subway_062525_dark.png#gh-dark-mode-only)
 
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A523.10.1-23aa62.svg)](https://www.nextflow.io/)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
