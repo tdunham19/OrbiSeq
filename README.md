@@ -70,6 +70,8 @@ Within the chosen output directory, files will be organized into subfolders name
 		- MultiQC - *_multiqc_report.html in ./outdir/quality_assessment_illumina 
 	- Preprocessed Reads: 
 		- trimmed, deduplicated fastq files - in ./outdir/illumina_preprocessing/trimmed_deduplicated_fastq|trimmed_fastq
+	- Initial alignment: 
+		- {sample_id}.existing_refseq.bam in ./outdir/initial_alignment_illumina
 	- Best10 Reference & best10 alignment: 
 		- {sample.id}_best10_refseq.fa in ./outdir/best10_illumina 
 		- *_best10_alignment.bam in ./outdir/best10_illumina
@@ -81,6 +83,8 @@ Within the chosen output directory, files will be organized into subfolders name
 	- Quality Assessment: 
 		- PycoQC - summary.html in ./outdir/quality_assessment_nanopore
 		- Nanoplot - NanoPlot-report.html in ./outdir/quality_assessment_nanopore
+	- Initial alignment: 
+		- {sample_id}.existing_refseq.bam in ./outdir/initial_alignment_nanopore
 	- Best10 Reference & best10 alignment: 
 		- {sample.id}_best10_refseq.fa in ./outdir/best10_nanopore 
 		- *_best10_alignment.bam in ./outdir/best10_nanopore
