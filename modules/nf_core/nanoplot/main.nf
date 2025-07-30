@@ -8,7 +8,7 @@ process NANOPLOT {
         'community.wave.seqera.io/library/nanoplot:1.44.1--e754907b17cfacc2' }"
 
     input:
-    tuple val(meta), path(reads)
+    tuple val(meta), path(inputreads)
 
     output:
     tuple val(meta), path("*.html")                , emit: html
@@ -22,8 +22,8 @@ process NANOPLOT {
 
     script:
     def args = task.ext.args ?: ''
-    def input_file = ("$reads".endsWith(".fastq.gz") || "$reads".endsWith(".fq.gz")) ? "--fastq ${reads}" :
-        ("$reads".endsWith(".txt")) ? "--summary ${reads}" : ''
+    def input_file = ("$inputreads".endsWith(".fastq.gz") || "$inputreads".endsWith(".fq.gz")) ? "--fastq ${inputreads}" :
+        ("$inputreads".endsWith(".txt")) ? "--summary ${inputreads}" : ''
     """
     NanoPlot \\
         $args \\

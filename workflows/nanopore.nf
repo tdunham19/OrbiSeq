@@ -5,6 +5,7 @@ nextflow.enable.dsl=2
 // include modules: local, nf-core, and Stenglein lab
 include { PYCOQC										 	 	  } from '../modules/nf_core/pycoqc/main.nf'
 include { NANOPLOT										 	 	  } from '../modules/nf_core/nanoplot/main.nf'
+include { PORECHOP										 	 	  } from '../modules/nf_core/porechop/main.nf'
 include { MINIMAP2_ALIGN_TO_EXISTING  	 				     	  } from '../modules/nf_core/minimap2/align/main.nf'
 include { IDENTIFY_BEST_SEGMENTS_FROM_SAM     				 	  } from '../modules/local/identify_best_segments_from_sam/main.nf'
 include { CALL_INDIVIDUAL_CONSENSUS_NANOPORE              	 	  } from '../subworkflows/call_individual_consensus_nanopore.nf'
@@ -22,7 +23,7 @@ workflow NANOPORE_CONSENSUS {
   // fastq input files
 
   Channel.fromFilePairs("${params.fastq_dir}/${params.nanopore_input_pattern}", size: -1, checkIfExists: true, maxDepth: 1)
-  .map{ name, reads ->
+  .map{ name, inputreads ->
          def matcher = name =~ /^([^.]+)/
          def meta = [:]
          if (matcher.find()) {
@@ -30,9 +31,9 @@ workflow NANOPORE_CONSENSUS {
          } else {
              meta.id = "UNKNOWN" 
          }
-         [ meta, reads ]
+         [ meta, inputreads ]
      }
-  .set { ch_reads }
+  .set { ch_inputreads }
   
   // refseq input files
 
@@ -60,10 +61,13 @@ workflow NANOPORE_CONSENSUS {
   PYCOQC ( ch_summary )
   
   // run Nanoplot on input fastq files
-  NANOPLOT ( ch_reads )
+  NANOPLOT ( ch_inputreads )
+  
+  // run Nanoplot on input fastq files
+  PORECHOP ( ch_inputreads )
     
   // align input reads using minimap2
-  MINIMAP2_ALIGN_TO_EXISTING ( ch_reads, ch_reference, "existing_refseq" )
+  MINIMAP2_ALIGN_TO_EXISTING ( PORECHOP.out.reads, ch_reference, "existing_refseq" )
   
   // extract new fasta file containing best aligned-to seqs for this dataset
   IDENTIFY_BEST_SEGMENTS_FROM_SAM ( MINIMAP2_ALIGN_TO_EXISTING.out.sam, ch_reference )
@@ -78,7 +82,7 @@ workflow NANOPORE_CONSENSUS {
   
   // this uses the nextflow combine operator to create a new channel
   // that contains the reads for each dataset and all individual fasta files 
-  individual_fasta_ch = ch_reads.combine(ch_best10_individual_fasta, by: 0)
+  individual_fasta_ch = PORECHOP.out.reads.combine(ch_best10_individual_fasta, by: 0)
   
   // parameters related consensus calling: min depth, basecall quality, frequency for consensus calling
   min_depth_ch = Channel.value(params.nanopore_min_depth)
@@ -105,7 +109,7 @@ workflow NANOPORE_CONSENSUS {
     }
 
   // re-align data against the new draft sequence (ie. final consensus sequence) using minimap2.
-  MINIMAP2_ALIGN_FINAL_VC ( ch_reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_VC_NANOPORE), "viral_consensus")
+  MINIMAP2_ALIGN_FINAL_VC ( PORECHOP.out.reads.join(FINAL_CONSENSUS_SEQUENCE_FILTERED_VC_NANOPORE), "viral_consensus")
 
   }
   
