@@ -1,4 +1,4 @@
-# ![tdunham19/OrbiSeq](docs/images/OrbiSeq_Subway_062525_light.png)
+# ![tdunham19/OrbiSeq](docs/images/OrbiSeq_Subway_073025.png)
 
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A523.10.1-23aa62.svg)](https://www.nextflow.io/)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
@@ -83,6 +83,8 @@ Within the chosen output directory, files will be organized into subfolders name
 	- Quality Assessment: 
 		- PycoQC - summary.html in ./outdir/quality_assessment_nanopore
 		- Nanoplot - NanoPlot-report.html in ./outdir/quality_assessment_nanopore
+	- Preprocessed Reads: 
+		- Porechop - *.fastq.gz in ./outdir.quality_assessment_nanopore
 	- Initial alignment: 
 		- {sample_id}.existing_refseq.bam in ./outdir/initial_alignment_nanopore
 	- Best10 Reference & best10 alignment: 
@@ -106,6 +108,7 @@ Within the chosen output directory, files will be organized into subfolders name
 
 ### Nanopore workflow 
 - Quality assessment of input reads and sequencing run : Nanoplot & PycoQC
+- Preprocessing of input reads: Porechop
 - Align input reads to large Orbi RefSeq : minimap2 align 
 - Choose best 10 segments from initial alignment
 - Align input reads to best10 RefSeq : minimap2 align 
