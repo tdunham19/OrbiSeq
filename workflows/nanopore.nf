@@ -63,7 +63,7 @@ workflow NANOPORE_CONSENSUS {
   // run Nanoplot on input fastq files
   NANOPLOT ( ch_inputreads )
   
-  // run Nanoplot on input fastq files
+  // run porechop on input fastq files
   PORECHOP ( ch_inputreads )
     
   // align input reads using minimap2
