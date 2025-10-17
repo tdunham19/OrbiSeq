@@ -47,7 +47,7 @@ workflow ILLUMINA_CONSENSUS {
     
   // run bowtie2-align on input reads with large reference  
   ch_processed_reads = PREPROCESS_READS.out.reads
-  BOWTIE2_ALIGN_TO_EXISTING (ch_processed_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index )
+  BOWTIE2_ALIGN_TO_EXISTING (ch_processed_reads, BOWTIE2_BUILD_INDEX_EXISTING.out.index, "existing_refseq" )
   
   // extract new fasta file containing best aligned-to seqs for this dataset
   IDENTIFY_BEST_SEGMENTS_FROM_SAM ( BOWTIE2_ALIGN_TO_EXISTING.out.sam, ch_reference )
