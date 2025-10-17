@@ -30,6 +30,10 @@ OrbiSeq performs three rounds of alignment. The first aligns reads to a large se
 Following this, the reference sequence with the highest number of aligned reads for each segment is selected to generate a “best10 reference.” Reads are then mapped to these best10 reference sequences to construct a consensus sequence.
 A final alignment is performed against the consensus sequence itself, providing validation and allowing for manual inspection.
 
+NOTE: This pipeline assumes singly infected samples and does not consider the possibility that samples may correspond to coinfections. 
+The pipeline will only produce a single consensus sequence for each segment, based on the existing reference sequence to which the most reads align. 
+It is recommended to inspect initial alignments for indication of co-infection, which could manifest as reads mapping to multiple, genotypically distinct, reference sequences.
+
 
 ### Platform:
 This pipeline has the capability to run either Illumina or Nanopore sequencing data. When running this pipeline the user must specify which platform their data came from by using the --platform parameter. 
