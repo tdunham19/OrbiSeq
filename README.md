@@ -157,6 +157,11 @@ To test if the pipeline is working properly the pipeline is provided with small 
 
 The testing is successful if the pipeline completes all steps with no errors (Note - PycoQC will not run for the Nanopore test).
 
+Before testing, set a supported version of Nextflow (between v23.10.1 and v25.04.8):
+```
+export NXF_VER=25.04.8
+```
+
 To test the illumina workflow: 
 ```
 nextflow run main.nf \
@@ -188,7 +193,8 @@ nextflow run main.nf --platform --fastq_dir --reference --profile -resume
 ## Dependencies
 To run the pipeline the user will need to be working on a computer that has nextflow and singularity installed.
 
-This pipeline requires nextflow version >= 23.10.1 [Installation - Nextflow Documentation](https://www.nextflow.io/docs/latest/install.html). It is recommended to install nextflow in a conda environment. 
+This pipeline requires nextflow version >= 23.10.1 and <= 25.04.8 [Installation - Nextflow Documentation](https://www.nextflow.io/docs/latest/install.html). 
+It is recommended to install nextflow in a conda environment and set a supported version within the specified range (see the test commands for an example). 
 
 There is no specified version of Singularity for this pipeline. The pipeline has been tested with singularity-ce v3.9.9-bionic.
 
@@ -196,4 +202,4 @@ The user has the option to also use a conda profile, this pipeline requires cond
 
 
 ## Citation
-If you use this tool please consider citing our publication [insert link to publication]. 
+If you use this tool please consider citing our publication [manuscript under review]. 
