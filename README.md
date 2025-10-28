@@ -1,6 +1,6 @@
 # ![tdunham19/OrbiSeq](docs/images/OrbiSeq_Subway_073025_light.png)
 
-[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A523.10.1-23aa62.svg)](https://www.nextflow.io/)
+[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A523.10.1%20%E2%80%93%2025.04.8-23aa62.svg)](https://www.nextflow.io/)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
@@ -193,7 +193,7 @@ nextflow run main.nf --platform --fastq_dir --reference --profile -resume
 ## Dependencies
 To run the pipeline the user will need to be working on a computer that has nextflow and singularity installed.
 
-This pipeline requires nextflow version >= 23.10.1 and <= 25.04.8 [Installation - Nextflow Documentation](https://www.nextflow.io/docs/latest/install.html). 
+This pipeline requires nextflow version >= 23.10.1-25.04.8 [Installation - Nextflow Documentation](https://www.nextflow.io/docs/latest/install.html). 
 It is recommended to install nextflow in a conda environment and set a supported version within the specified range (see the test commands for an example). 
 
 There is no specified version of Singularity for this pipeline. The pipeline has been tested with singularity-ce v3.9.9-bionic.
