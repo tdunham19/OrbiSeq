@@ -59,6 +59,7 @@ This pipeline can utilize any reference genome from *Orbiviruses* with 10 segmen
 	- There are premade reference files for bluetongue virus (BTV), epizootic hemorrhagic disease virus (EHDV), and African horse sickness virus (AHSV). More information on the creation of these references can be found in [cite publication]. 
 		- The reference files can be found in ./reference/ directories. 
 		- * Note: the provided references will not be updated, therefore we recommend that users update the database to current sequences as this tool could be used years from this point.
+		- Incomplete sequences may arise with the use of the premade referece. We recommend inspecting the best10 reference and alignment as this could be a result of an incomplete reference sequence.  
 - User Included Reference Sequences	
 	- The user is also able to upload their own custom reference file. 
 	- When uploading custom reference sequences the user must ensure that the file is formatted correctly. It should be formatted as: segment#_sample_id (ex. s1_Genbank_Acession). Additionally there should be NO BLANK LINES throughout the document. 
