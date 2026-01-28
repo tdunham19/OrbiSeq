@@ -204,4 +204,4 @@ The user has the option to also use a conda profile, this pipeline requires cond
 
 
 ## Citation
-If you use this tool please consider citing our publication [manuscript under review]. 
+If you use this tool please consider citing our publication: "Optimized library preparation, sequencing, and data analysis protocols for the generation of orbivirus consensus sequences" DOI: 10.1186/s12864-025-12422-y
